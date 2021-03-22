@@ -1,0 +1,35 @@
+nestbox
+- id
+- from_date
+- until_date
+- mandant_id
+
+
+breed
+- id
+- discovery_date
+- id_bird
+- latitude
+- longitude
+
+bird
+- id
+- name
+- furter_information_link
+
+
+mandant
+- id
+- name
+- website
+- email
+
+
+user
+- id
+- mandant_id
+- lastname
+- firstname
+- email
+- password
+- salt
