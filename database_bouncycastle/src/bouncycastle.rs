@@ -5,14 +5,14 @@ use chrono::prelude::*;
 type InsertManyType = Result<mongodb::results::InsertManyResult, mongodb::error::Error>;
 type VecDocType = Vec<mongodb::bson::Document>;
 
-pub fn poplate_db() -> mongodb::error::Result<()> {
-    let client = Client::with_uri_str("mongodb://127.0.2.15:27017/?w=majority")?;
+pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Result<()> {
+    let client = Client::with_uri_str(db_uri)?;
 
     let database = client.database("nestbox");
     let breeds = database.collection("breeds");
     
     let mut breed_docs: VecDocType = Vec::new();
-    for i in  0..100000 {
+    for i in  0..records_to_insert {
         breed_docs.push(doc!{"name": format!("breed_eleven {}", i), "date": Utc::now()});
         if i % 10000 == 0 {
             let _result = write_to_db(&breeds, &mut breed_docs)?;
