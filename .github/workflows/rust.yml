@@ -1,10 +1,10 @@
 on: [push]
 
-name: test_minigrep
+name: test_nestbox
 
 jobs:
   check:
-    name: minigrep
+    name: nestbox
     runs-on: ubuntu-latest
     steps:
       - name: Install latest stable
@@ -18,5 +18,5 @@ jobs:
       # as it is set as an "override" for current directory
 
       - name: Run cargo test
-        run: cargo test
+        run: cd database_bouncycastle && cargo test
         
