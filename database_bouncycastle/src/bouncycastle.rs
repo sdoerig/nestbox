@@ -4,32 +4,51 @@ use chrono::prelude::*;
 
 type InsertManyType = Result<mongodb::results::InsertManyResult, mongodb::error::Error>;
 type VecDocType = Vec<mongodb::bson::Document>;
+const STEP_SIZE: i32 = 100000;
 
 pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Result<()> {
     let client = Client::with_uri_str(db_uri)?;
 
     let database = client.database("nestbox");
     let breeds = database.collection("breeds");
-    
-    let mut breed_docs: VecDocType = Vec::new();
+    let nestboxes = database.collection("nestboxes");
+    let mandant = database.collection("mandant");
+        
+    let mut docs: VecDocType = Vec::new();
+    docs.push(doc!{"name": "BirdLife",  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
+    let _result = write_to_db(&mandant, &mut docs)?;
+    println!("mandant {:#?}", _result);
+    let mandant_object = _result.inserted_ids.get(&0).unwrap();
+    for i in 0..records_to_insert {
+        docs.push(doc!{"public": true});
+        if i % STEP_SIZE == 0 {
+            let _result = write_to_db(&nestboxes, &mut docs);
+        }
+        
+    }
+    if docs.len() > 0 {
+        let _result = write_to_db(&nestboxes, &mut docs);
+    }
+
+
     for i in  0..records_to_insert {
-        breed_docs.push(doc!{"name": format!("breed_eleven {}", i), "date": Utc::now()});
-        if i % 10000 == 0 {
-            let _result = write_to_db(&breeds, &mut breed_docs)?;
-            for (id, object_id) in _result.inserted_ids {
-                println!("id {:#?}, object_id {:#?}", id, object_id);
-            }
+        docs.push(doc!{"name": format!("breed_eleven {}", i), "date": Utc::now(), "mandant": mandant_object});
+        if i % STEP_SIZE == 0 {
+            let _result = write_to_db(&breeds, &mut docs)?;
+            //for (id, object_id) in _result.inserted_ids {
+            //    println!("id {:#?}, object_id {:#?}", id, object_id);
+            //}
             
         } 
     } 
-    if breed_docs.len() > 0 {
-        let _result = write_to_db(&breeds, &mut breed_docs)?;
+    if docs.len() > 0 {
+        let _result = write_to_db(&breeds, &mut docs)?;
     }
     Ok(())
 }
 
-fn write_to_db(breeds: &mongodb::sync::Collection, breed_docs: &mut VecDocType) -> InsertManyType {
-    let result = breeds.insert_many(breed_docs.clone().into_iter(), None)?;
-    breed_docs.clear();
+fn write_to_db(collection: &mongodb::sync::Collection, docs: &mut VecDocType) -> InsertManyType {
+    let result = collection.insert_many(docs.clone().into_iter(), None)?;
+    docs.clear();
     Ok(result)
 }
