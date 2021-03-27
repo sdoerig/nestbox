@@ -2,15 +2,25 @@ nestbox
 - id
 - from_date
 - until_date
+- uuid
+- is_public
 - mandant_id
+
+geolocations
+- id
+- nestbox_id
+- latitude
+- longitude
+- from_date
+- until_date
 
 
 breed
 - id
+- nestbox_id
+- user_id
 - discovery_date
 - id_bird
-- latitude
-- longitude
 
 bird
 - id
@@ -33,3 +43,13 @@ user
 - email
 - password
 - salt
+
+
+
+mandant 1 ----- n users
+|
++----- 1 ------ n nestboxes 1 ----- n breeds
+                  |
+                  + n ------------- n geolocation
+
+  
