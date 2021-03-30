@@ -1,6 +1,5 @@
 use rand::Rng;
 use std::collections::{hash_map::RandomState, HashMap};
-
 use chrono::prelude::*;
 use mongodb::sync::Client;
 use mongodb::{
@@ -9,7 +8,6 @@ use mongodb::{
 };
 use uuid::Uuid;
 
-type InsertManyType = Result<mongodb::results::InsertManyResult, mongodb::error::Error>;
 type VecDocType = Vec<mongodb::bson::Document>;
 const STEP_SIZE: usize = 10000;
 
@@ -44,12 +42,11 @@ impl Collector {
     fn write_to_db(&mut self) {
         self.result = match self
             .collection
-            .insert_many(self.docs.clone().into_iter(), None)
+            .insert_many(self.docs.drain(..), None)
         {
             Ok(s) => s.inserted_ids,
             _ => HashMap::new(),
         };
-        self.docs.clear();
     }
 
     pub fn flush(&mut self) {
