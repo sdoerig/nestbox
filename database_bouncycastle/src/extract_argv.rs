@@ -3,22 +3,29 @@ use std::env;
 use std::process;
 
 fn print_usage(program: &str, opts: &Options) {
-    let brief = format!("Usage: {} -d mongodb://127.0.2.15:27017/?w=majority -n 123", program);
+    let brief = format!(
+        "Usage: {} -d mongodb://127.0.2.15:27017/?w=majority -n 123",
+        program
+    );
     print!("{}", opts.usage(&brief));
 }
-
-
 
 pub fn extract_argv() -> (String, i32) {
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
     let mut opts = Options::new();
-    opts.optopt("d", "database_uri", 
-    "URI to mongodb e.g mongodb://<db_host>:<db_port>/",
-    "MONGO_DB_URI");
-    opts.optopt("n", "number of records to insert", 
-    "The number of records to insert",
-    "NUMBER");
+    opts.optopt(
+        "d",
+        "database_uri",
+        "URI to mongodb e.g mongodb://<db_host>:<db_port>/",
+        "MONGO_DB_URI",
+    );
+    opts.optopt(
+        "n",
+        "number of records to insert",
+        "The number of records to insert",
+        "NUMBER",
+    );
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
         Err(_f) => {
