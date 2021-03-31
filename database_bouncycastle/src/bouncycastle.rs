@@ -9,85 +9,46 @@
 //! the database with records I don't see a need to write some.
 //!
 use chrono::prelude::*;
+use mongodb::bson::{doc, Bson};
 use mongodb::sync::Client;
-use mongodb::{
-    bson::{doc, Bson},
-    sync::Collection,
-};
 use rand::Rng;
 use sha3::{Digest, Sha3_256};
-use std::collections::{hash_map::RandomState, HashMap};
+
 use uuid::Uuid;
+mod collector;
+use collector::{Collector, CollectorState};
 
-type VecDocType = Vec<mongodb::bson::Document>;
-const STEP_SIZE: usize = 10000;
+const DATABASE: &str = "nestbox";
+const COL_NESTBOXES: &str = "nestboxes";
+const COL_MANDANTS: &str = "mandants";
+const COL_BREEDS: &str = "breeds";
+const COL_USERS: &str = "users";
+const COL_GEOLOCATIONS: &str = "geolocations";
+const COL_BIRDS: &str = "birds";
 
-enum CollectorState {
-    Flushed,
-    Accumulating,
-}
-struct Collector {
-    docs: VecDocType,
-    collection: Collection,
-    pub result: HashMap<usize, Bson, RandomState>,
-}
-
-impl Collector {
-    // Collects the generated records and if the STEPSIZE is reached
-    // writes it to the mongodb collection.
-    pub fn new(collection_store: Collection) -> Self {
-        Collector {
-            docs: Vec::new(),
-            collection: collection_store,
-            result: HashMap::new(),
-        }
-    }
-
-    pub fn append_doc(&mut self, doc: mongodb::bson::Document) -> CollectorState {
-        self.docs.push(doc);
-        if self.docs.len() > STEP_SIZE {
-            self.write_to_db();
-            return CollectorState::Flushed;
-        }
-        CollectorState::Accumulating
-    }
-
-    fn write_to_db(&mut self) {
-        self.result = match self.collection.insert_many(self.docs.drain(..), None) {
-            Ok(s) => s.inserted_ids,
-            _ => HashMap::new(),
-        };
-    }
-
-    pub fn flush(&mut self) {
-        if !self.docs.is_empty() {
-            self.write_to_db();
-        }
-    }
-}
-
-pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Result<()> {
+pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Result<()> {
     let client = Client::with_uri_str(db_uri)?;
 
-    let database = client.database("nestbox");
-    let mut nestboxes_collector = Collector::new(database.collection("nestboxes"));
-    let mut mandant_collector = Collector::new(database.collection("mandants"));
-    let mut breeds_collector = Collector::new(database.collection("breeds"));
-    let mut users_collector = Collector::new(database.collection("users"));
-    let mut geolocations_collector = Collector::new(database.collection("geolocations"));
+    let database = client.database(DATABASE);
+    let mut nestboxes_collector = Collector::new(database.collection(COL_NESTBOXES));
+    let mut mandant_collector = Collector::new(database.collection(COL_MANDANTS));
+    let mut breeds_collector = Collector::new(database.collection(COL_BREEDS));
+    let mut users_collector = Collector::new(database.collection(COL_USERS));
+    let mut geolocations_collector = Collector::new(database.collection(COL_GEOLOCATIONS));
+    let mut birds_collector = Collector::new(database.collection(COL_BIRDS));
     mandant_collector.append_doc(doc!{"name": "BirdLife",  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
     mandant_collector.flush();
-
     let mut mandant_object = mandant_collector.result.get(&0).unwrap();
+    gen_birds_for_mandant(&mut birds_collector, mandant_object);
     for i in 0..records_to_insert as usize {
-        let (user_password_salt, password_hash) = fun_name();
-        users_collector.append_doc(doc!{
-            "mandant_id": mandant_object,
-            "lastname": "Gucker",
-            "firstname":"Fritz",
-            "email": format!("email_{}@birdwatch.ch", i),
-            "password_hash": password_hash,
-            "salt": user_password_salt.to_string()});
+        let (user_password_salt, password_hash) = get_password_and_salt();
+        users_collector.append_doc(doc! {
+        "mandant_id": mandant_object,
+        "lastname": "Gucker",
+        "firstname":"Fritz",
+        "email": format!("email_{}@birdwatch.ch", i),
+        "password_hash": password_hash,
+        "salt": user_password_salt.to_string()});
         let nestbox_flushed = match nestboxes_collector.append_doc(
             doc! {"public": true, "uuid": Uuid::new_v4().to_string(), "mandant": mandant_object, "created_at": Utc::now()},
         ) {
@@ -98,6 +59,7 @@ pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resul
             generate_nestboxes_additionals(
                 &users_collector,
                 &nestboxes_collector,
+                &birds_collector,
                 &mut geolocations_collector,
                 &mut breeds_collector,
             );
@@ -107,6 +69,7 @@ pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resul
                 doc!{"name": format!("BirdLife {}", i),  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
             mandant_collector.flush();
             mandant_object = mandant_collector.result.get(&0).unwrap();
+            gen_birds_for_mandant(&mut birds_collector, mandant_object);
         }
     }
     nestboxes_collector.flush();
@@ -114,6 +77,7 @@ pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resul
     generate_nestboxes_additionals(
         &users_collector,
         &nestboxes_collector,
+        &birds_collector,
         &mut geolocations_collector,
         &mut breeds_collector,
     );
@@ -122,7 +86,15 @@ pub fn poplate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resul
     Ok(())
 }
 
-fn fun_name() -> (Uuid, String) {
+fn gen_birds_for_mandant(birds_collector: &mut Collector, mandant_object: &Bson) {
+    for b in 0..150 {
+        birds_collector
+            .append_doc(doc! {"bird": format!("bird_{}", b), "mandant_id": mandant_object});
+    }
+    birds_collector.flush();
+}
+
+fn get_password_and_salt() -> (Uuid, String) {
     let user_password_salt = Uuid::new_v4();
     let mut hasher = Sha3_256::new();
     let password_with_salt = format!("{}_{}", "secretbird", user_password_salt.to_string());
@@ -134,9 +106,11 @@ fn fun_name() -> (Uuid, String) {
 fn generate_nestboxes_additionals(
     users_collector: &Collector,
     nestboxes_collector: &Collector,
+    birds_collector: &Collector,
     geolocations_collector: &mut Collector,
     breeds_collector: &mut Collector,
 ) {
+    let number_of_birds = birds_collector.result.len();
     for (_c, nestbox_object) in nestboxes_collector.result.iter() {
         let user_object = users_collector.result.get(&_c).unwrap();
         for _b in 0..6 {
@@ -146,11 +120,10 @@ fn generate_nestboxes_additionals(
             "from_date": 0,
             "until_date": 0,
             "position": {"type": "point", "coordinates": [ longitude, latitude ]}});
-            breeds_collector
-                .append_doc(doc! {
-                    "nestbox_id": nestbox_object, 
-                    "user_id": user_object, 
-                    "discovery_date": Utc::now()});
+            breeds_collector.append_doc(doc! {
+            "nestbox_id": nestbox_object,
+            "user_id": user_object,
+            "discovery_date": Utc::now(), "bird_id": birds_collector.result.get(&(_c % number_of_birds)).unwrap()});
         }
     }
 }
@@ -176,4 +149,32 @@ fn get_random_range(from: f32, until: f32, valid_min: f32, valid_max: f32) -> f3
     }
     let mut rng = rand::thread_rng();
     rng.gen_range(from_cleaned..until_cleaned)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    const INSERTED_RECORDS: usize = 12;
+    // Not ready yet - have first to figure out how to install mongodb during 
+    // github testrun
+    //#[test]
+    fn test_populate_db() {
+        let _result = populate_db(
+            "mongodb://127.0.2.15:27017/?w=majority",
+            INSERTED_RECORDS as i32,
+        );
+    }
+    //#[test]
+    fn test_collections() {
+        let client = match Client::with_uri_str("mongodb://127.0.2.15:27017/?w=majority") {
+            Ok(c) => c,
+            _ => return
+        };
+        let database = client.database(&DATABASE);
+        let mandants_collection = database.collection(&COL_MANDANTS);
+        let mandants_res = mandants_collection.count_documents(doc! {}, None) ;
+        assert_eq!(mandants_res.unwrap(), 2);
+    }
+
 }
