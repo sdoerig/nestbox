@@ -156,25 +156,28 @@ mod tests {
 
     use super::*;
     const INSERTED_RECORDS: usize = 12;
+
     // Not ready yet - have first to figure out how to install mongodb during 
     // github testrun
     #[test]
-    fn test_populate_db() {
-        let _result = populate_db(
-            "mongodb://127.0.0.1:27017/?w=majority",
-            INSERTED_RECORDS as i32,
-        );
-    }
-    #[test]
-    fn test_collections() {
+    fn test_01_populate_db() {
         let client = match Client::with_uri_str("mongodb://127.0.0.1:27017/?w=majority") {
             Ok(c) => c,
             _ => return
         };
         let database = client.database(&DATABASE);
         let mandants_collection = database.collection(&COL_MANDANTS);
+        let mandants_res_before_test = mandants_collection.count_documents(doc! {}, None) ;
+        let _result = populate_db(
+            "mongodb://127.0.0.1:27017/?w=majority",
+            INSERTED_RECORDS as i32,
+        );
+        
+        
+        
         let mandants_res = mandants_collection.count_documents(doc! {}, None) ;
-        assert_eq!(mandants_res.unwrap(), 2);
-    }
+        assert_eq!(mandants_res.unwrap() - mandants_res_before_test.unwrap(), 2);
 
+    }
+    
 }
