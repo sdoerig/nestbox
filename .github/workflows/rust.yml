@@ -26,6 +26,8 @@ jobs:
         run: sudo apt-get update
       - name: Install mongodb
         run: sudo apt-get install -y mongodb-org
+      - name: Start mongod
+        run: sudo systemctl start mongod
       - name: Run cargo test
         run: cd database_bouncycastle && cargo test
         
