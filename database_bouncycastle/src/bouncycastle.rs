@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn test_populate_db() {
         let _result = populate_db(
-            "mongodb://127.0.2.15:27017/?w=majority",
+            "mongodb://127.0.0.1:27017/?w=majority",
             INSERTED_RECORDS as i32,
         );
     }
