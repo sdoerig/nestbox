@@ -158,16 +158,16 @@ mod tests {
     const INSERTED_RECORDS: usize = 12;
     // Not ready yet - have first to figure out how to install mongodb during 
     // github testrun
-    //#[test]
+    #[test]
     fn test_populate_db() {
         let _result = populate_db(
             "mongodb://127.0.2.15:27017/?w=majority",
             INSERTED_RECORDS as i32,
         );
     }
-    //#[test]
+    #[test]
     fn test_collections() {
-        let client = match Client::with_uri_str("mongodb://127.0.2.15:27017/?w=majority") {
+        let client = match Client::with_uri_str("mongodb://127.0.0.1:27017/?w=majority") {
             Ok(c) => c,
             _ => return
         };
