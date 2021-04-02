@@ -16,16 +16,6 @@ jobs:
 
       # `cargo check` command here will use installed `nightly`
       # as it is set as an "override" for current directory
-      - name: Install gnupg
-        run: sudo apt-get install gnupg
-      - name: Install mongodb Key
-        run: wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
-      - name: Install apt source
-        run: echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-      - name: Update package list
-        run: sudo apt-get update
-      - name: Install mongodb
-        run: sudo apt-get install -y mongodb-org
       - name: Start mongod
         run: sudo systemctl start mongod
       - name: Run cargo test
