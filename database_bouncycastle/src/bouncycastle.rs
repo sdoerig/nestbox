@@ -5,8 +5,6 @@
 //! This because I do feel unconfortable if developing something on
 //! an empty database, because real life does not take place on an empty database.
 //!
-//! There are also no tests - I might write some later on - but as long as it fills
-//! the database with records I don't see a need to write some.
 //!
 use chrono::prelude::*;
 use mongodb::bson::{doc, Bson};
@@ -156,28 +154,52 @@ mod tests {
 
     use super::*;
     const INSERTED_RECORDS: usize = 12;
+    const DB_URI: &str = "mongodb://127.0.0.1:27017/?w=majority";
 
-    // Not ready yet - have first to figure out how to install mongodb during 
-    // github testrun
+    // Note: any case below tests only if the number of records in the db
+    // are greater after the test then before. So the test only asserts
+    // that an insertion has been done.
     #[test]
-    fn test_01_populate_db() {
-        let client = match Client::with_uri_str("mongodb://127.0.0.1:27017/?w=majority") {
+    fn test_insertion_collection_mandants() {
+        db_assert(COL_MANDANTS);
+    }
+    #[test]
+    fn test_insertion_collection_nestboxes() {
+        db_assert(COL_NESTBOXES);
+    }
+    #[test]
+    fn test_insertion_collection_breeds() {
+        db_assert(COL_BREEDS);
+    }
+   
+    #[test]
+    fn test_insertion_collection_birds() {
+        db_assert(COL_BIRDS);
+    }
+   
+    #[test]
+    fn test_insertion_collection_users() {
+        db_assert(COL_USERS);
+    }
+   
+    #[test]
+    fn test_insertion_collection_geolocations() {
+        db_assert(COL_GEOLOCATIONS);
+    }
+   
+    fn db_assert(collection: &str) {
+        let client = match Client::with_uri_str(DB_URI) {
             Ok(c) => c,
             _ => return
         };
         let database = client.database(&DATABASE);
-        let mandants_collection = database.collection(&COL_MANDANTS);
+        let mandants_collection = database.collection(collection);
         let mandants_res_before_test = mandants_collection.count_documents(doc! {}, None) ;
         let _result = populate_db(
-            "mongodb://127.0.0.1:27017/?w=majority",
+            DB_URI,
             INSERTED_RECORDS as i32,
         );
-        
-        
-        
         let mandants_res = mandants_collection.count_documents(doc! {}, None) ;
-        assert_eq!(mandants_res.unwrap() - mandants_res_before_test.unwrap(), 2);
-
+        assert_eq!(mandants_res.unwrap() > mandants_res_before_test.unwrap(), true);
     }
-    
 }
