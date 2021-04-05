@@ -1,0 +1,12 @@
+[package]
+name = "nestboxd"
+version = "0.1.0"
+authors = ["Stefan Dörig <sdoerig@bluewin.ch>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "3"
+mongodb = "1"
+bson = "1"
+serde = "1"
+futures = "0.3"
