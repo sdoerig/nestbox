@@ -6,12 +6,12 @@ mod controller;
 mod service;
 
 pub struct ServiceContainer {
-  user: NestboxService,
+  nestbox: NestboxService,
 }
 
 impl ServiceContainer {
-  pub fn new(user: NestboxService) -> Self {
-    ServiceContainer { user }
+  pub fn new(nestbox: NestboxService) -> Self {
+    ServiceContainer { nestbox }
   }
 }
 

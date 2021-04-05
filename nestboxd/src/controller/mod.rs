@@ -1,22 +1,27 @@
 use actix_web::{get, web, HttpResponse, Responder};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 #[derive(Deserialize)]
-pub struct Nestbox {
+pub struct NestboxReq {
     uuid: String,
 }
+
+#[derive(Serialize, Deserialize)]
+struct NestboxResponse {
+    uuid: String
+}
+
 
 #[get("/nestboxes/{uuid}")]
 pub async fn nestboxes_get(
     app_data: web::Data<crate::AppState>,
-    nestbox: web::Path<Nestbox>,
+    nestbox: web::Path<NestboxReq>,
 ) -> impl Responder {
     let result =
-        web::block(move || app_data.service_container.user.get_by_uuid(&nestbox.uuid)).await;
+        web::block(move || app_data.service_container.nestbox.get_by_uuid(&nestbox.uuid)).await;
     match result {
-        Ok(result) => HttpResponse::Ok().json(result),
-        Err(e) => {
-            println!("Error while getting, {:?}", e);
-            HttpResponse::InternalServerError().finish()
+        Ok(doc) => HttpResponse::Ok().json(doc),
+        Err(_e) => {
+            HttpResponse::NotFound().finish()
         }
     }
 }
