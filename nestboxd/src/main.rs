@@ -1,9 +1,12 @@
 use actix_web::{App, HttpServer};
+use extract_argv::{extract_argv, parse_yaml};
 use mongodb::{options::ClientOptions, Client};
 use service::NestboxService;
 
 mod controller;
 mod service;
+mod extract_argv;
+
 
 pub struct ServiceContainer {
   nestbox: NestboxService,
@@ -21,9 +24,11 @@ pub struct AppState {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-  let client_options = ClientOptions::parse("mongodb://localhost:27017").await.unwrap();
+  let config_struct = parse_yaml(extract_argv());
+  let server_http_bind = format!("{}:{}", &config_struct.httpserver_ip, &config_struct.httpserver_port);
+  let client_options = ClientOptions::parse(&config_struct.mongodb_uri).await.unwrap();
   let client = Client::with_options(client_options).unwrap();
-  let db = client.database("nestbox");
+  let db = client.database(&config_struct.mongodb_database);
 
   let nestboxes_col = db.collection("nestboxes");
 
@@ -35,7 +40,7 @@ async fn main() -> std::io::Result<()> {
       .service(controller::nestboxes_get)
       
   })
-  .bind("127.0.0.1:8080")?
+  .bind(server_http_bind)?
   .run()
   .await
 }

@@ -5,6 +5,8 @@ authors = ["Stefan Dörig <sdoerig@bluewin.ch>"]
 edition = "2018"
 
 [dependencies]
+getopts = "0.2"
+yaml-rust = "0.4"
 actix-web = "3"
 mongodb = "1"
 bson = "1"
