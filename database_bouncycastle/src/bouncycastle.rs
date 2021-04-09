@@ -87,7 +87,8 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
 fn gen_birds_for_mandant(birds_collector: &mut Collector, mandant_object: &Bson) {
     for b in 0..150 {
         birds_collector
-            .append_doc(doc! {"bird": format!("bird_{}", b), "mandant_id": mandant_object});
+            .append_doc(doc! {"bird": format!("bird_{}", b), "mandant": 
+            {"$ref": COL_MANDANTS, "$id": mandant_object, "$db": DATABASE}});
     }
     birds_collector.flush();
 }
@@ -114,14 +115,19 @@ fn generate_nestboxes_additionals(
         for _b in 0..6 {
             let longitude = random_longitude(-180.0, 180.0);
             let latitude = random_latitude(-90.0, 90.0);
-            geolocations_collector.append_doc(doc! {"nestbox_id": nestbox_object,
-            "from_date": 0,
-            "until_date": 0,
-            "position": {"type": "point", "coordinates": [ longitude, latitude ]}});
+            geolocations_collector.append_doc(
+                doc! {"nestbox": {"$ref":  COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
+                "from_date": 0,
+                "until_date": 0,
+                "position": {"type": "point", "coordinates": [ longitude, latitude ]}},
+            );
             breeds_collector.append_doc(doc! {
-            "nestbox_id": nestbox_object,
-            "user_id": user_object,
-            "discovery_date": Utc::now(), "bird_id": birds_collector.result.get(&(_c % number_of_birds)).unwrap()});
+            "nestbox": {"$ref": COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
+            "user": {"$ref": COL_USERS, "$id": user_object, "$db": DATABASE},
+            "discovery_date": Utc::now(),
+            "bird": {"$ref": COL_BIRDS,
+                "$id": birds_collector.result.get(&(_c % number_of_birds)).unwrap(), 
+                "$db": DATABASE}});
         }
     }
 }
@@ -171,35 +177,35 @@ mod tests {
     fn test_insertion_collection_breeds() {
         db_assert(COL_BREEDS);
     }
-   
+
     #[test]
     fn test_insertion_collection_birds() {
         db_assert(COL_BIRDS);
     }
-   
+
     #[test]
     fn test_insertion_collection_users() {
         db_assert(COL_USERS);
     }
-   
+
     #[test]
     fn test_insertion_collection_geolocations() {
         db_assert(COL_GEOLOCATIONS);
     }
-   
+
     fn db_assert(collection: &str) {
         let client = match Client::with_uri_str(DB_URI) {
             Ok(c) => c,
-            _ => return
+            _ => return,
         };
         let database = client.database(&DATABASE);
         let mandants_collection = database.collection(collection);
-        let mandants_res_before_test = mandants_collection.count_documents(doc! {}, None) ;
-        let _result = populate_db(
-            DB_URI,
-            INSERTED_RECORDS as i32,
+        let mandants_res_before_test = mandants_collection.count_documents(doc! {}, None);
+        let _result = populate_db(DB_URI, INSERTED_RECORDS as i32);
+        let mandants_res = mandants_collection.count_documents(doc! {}, None);
+        assert_eq!(
+            mandants_res.unwrap() > mandants_res_before_test.unwrap(),
+            true
         );
-        let mandants_res = mandants_collection.count_documents(doc! {}, None) ;
-        assert_eq!(mandants_res.unwrap() > mandants_res_before_test.unwrap(), true);
     }
 }

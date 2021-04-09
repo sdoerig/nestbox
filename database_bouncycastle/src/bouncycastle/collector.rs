@@ -1,7 +1,7 @@
 use mongodb::{bson::Bson, sync::Collection};
 
 use std::collections::{hash_map::RandomState, HashMap};
-const STEP_SIZE: usize = 10000;
+const STEP_SIZE: usize = 5000;
 type VecDocType = Vec<mongodb::bson::Document>;
 pub enum CollectorState {
     Flushed,
