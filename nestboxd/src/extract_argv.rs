@@ -1,8 +1,7 @@
 use getopts::Options;
-use std::fs;
 use std::process;
-use std::{env, string};
-use yaml_rust::{YamlEmitter, YamlLoader};
+use std::{env};
+use yaml_rust::{YamlLoader};
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} -c CONFIG_FILE", program);
@@ -22,14 +21,13 @@ pub fn extract_argv() -> String {
             process::exit(2)
         }
     };
-    let config_file_path = match matches.opt_str("c") {
+    match matches.opt_str("c") {
         Some(m) => m,
         None => {
             print_usage(&program, &opts);
             process::exit(3)
         }
-    };
-    config_file_path
+    }
 }
 
 pub struct Config {

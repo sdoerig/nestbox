@@ -1,4 +1,4 @@
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 #[derive(Deserialize)]
 pub struct NestboxReq {
@@ -24,4 +24,24 @@ pub async fn nestboxes_get(
             HttpResponse::NotFound().finish()
         }
     }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct LoginReq {
+    pub username: String,
+    pub password: String
+}
+#[derive(Deserialize, Serialize)]
+pub struct LoginRes {
+    pub username: String,
+    pub password: String
+}
+
+#[post("/login")]
+pub async fn login_post(app_data: web::Data<crate::AppState>, 
+    login: web::Json<LoginReq>) -> impl Responder {
+    
+    HttpResponse::Ok().json(LoginRes{ username: login.username.clone(), 
+        password: login.password.clone()})
+
 }

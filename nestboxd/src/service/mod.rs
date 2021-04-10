@@ -22,3 +22,14 @@ impl NestboxService {
         block_on(res)
     }
 }
+
+#[derive(Clone)]
+pub struct UserService {
+    collection: Collection,
+}
+
+impl UserService {
+    pub fn new(collection: Collection) -> UserService {
+        UserService { collection }
+    }
+}
