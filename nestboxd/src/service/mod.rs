@@ -2,6 +2,7 @@ use bson::{doc, Document};
 use futures::executor::block_on;
 use mongodb::{error::Error, Collection};
 
+
 #[derive(Clone)]
 pub struct NestboxService {
     collection: Collection,
@@ -31,5 +32,20 @@ pub struct UserService {
 impl UserService {
     pub fn new(collection: Collection) -> UserService {
         UserService { collection }
+    }
+
+    pub async fn login(&self, email: &str, password: &str) -> Option<String> {
+        let user_res = self.collection.find_one(doc! {"email": email}, None).await.ok()?;
+        //block_on(user_res);
+        let userobj = match user_res {
+            Some(u) => u,
+            None => return None
+        };
+        let password_bson = userobj.get("password_hash");
+        let password_hash = match password_bson {
+            Some(b) => b.as_str()?,
+            None => return None
+        };
+        Some(String::from(password_hash))
     }
 }
