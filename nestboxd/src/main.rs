@@ -1,8 +1,8 @@
 use actix_web::{App, HttpServer};
 use extract_argv::{extract_argv, parse_yaml};
 use mongodb::{options::ClientOptions, Client};
-use service::NestboxService;
-use service::UserService;
+use service::nestbox::NestboxService;
+use service::user::UserService;
 
 mod controller;
 mod extract_argv;
@@ -47,8 +47,8 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .data(AppState { service_container })
-            .service(controller::nestboxes_get)
-            .service(controller::login_post)
+            .service(controller::nestbox::nestboxes_get)
+            .service(controller::user::login_post)
     })
     .bind(server_http_bind)?
     .run()
