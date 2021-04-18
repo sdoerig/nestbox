@@ -1,6 +1,6 @@
 use actix_web::{App, HttpServer};
 use extract_argv::{extract_argv, parse_yaml};
-use mongodb::{options::ClientOptions, Client};
+use mongodb::{options::ClientOptions, Client, Database};
 use service::nestbox::NestboxService;
 use service::user::UserService;
 
@@ -9,13 +9,21 @@ mod extract_argv;
 mod service;
 
 pub struct ServiceContainer {
+    db: Database,
     nestbox: NestboxService,
     user: UserService,
 }
 
 impl ServiceContainer {
-    pub fn new(nestbox: NestboxService, user: UserService) -> Self {
-        ServiceContainer { nestbox, user }
+    pub fn new(db: Database) -> Self {
+        let nestboxes_col = db.collection("nestboxes");
+        let users_col = db.collection("users");
+
+        ServiceContainer {
+            db,
+            nestbox: NestboxService::new(nestboxes_col),
+            user: UserService::new(users_col),
+        }
     }
 }
 
@@ -36,14 +44,8 @@ async fn main() -> std::io::Result<()> {
     let client = Client::with_options(client_options).unwrap();
     let db = client.database(&config_struct.mongodb_database);
 
-    let nestboxes_col = db.collection("nestboxes");
-    let users_col = db.collection("users");
-
     HttpServer::new(move || {
-        let service_container = ServiceContainer::new(
-            NestboxService::new(nestboxes_col.clone()),
-            UserService::new(users_col.clone()),
-        );
+        let service_container = ServiceContainer::new(db.clone());
 
         App::new()
             .data(AppState { service_container })

@@ -10,8 +10,8 @@ pub struct LoginReq {
 #[derive(Deserialize, Serialize)]
 pub struct LoginRes {
     pub email: String,
-    pub password: String,
-    pub badword: String,
+    pub success: bool,
+    pub session: String,
 }
 
 #[post("/login")]
@@ -28,15 +28,15 @@ pub async fn login_post(
         Some(r) => {
             return HttpResponse::Ok().json(LoginRes {
                 email: login.email.clone(),
-                password: login.password.clone(),
-                badword: r,
+                success: true,
+                session: r,
             })
         }
         None => {
             return HttpResponse::Ok().json(LoginRes {
                 email: login.email.clone(),
-                password: login.password.clone(),
-                badword: String::from("jackass"),
+                success: false,
+                session: String::from("n.a."),
             })
         }
     };
