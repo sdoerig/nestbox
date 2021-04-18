@@ -43,7 +43,7 @@ impl UserService {
         ) {
             return Some(String::from("password_is_correct"));
         }
-        Some(String::from("password_is_incorrect"))
+        None
     }
 }
 
