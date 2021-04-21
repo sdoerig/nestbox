@@ -1,4 +1,4 @@
-use bson::{doc};
+use bson::{doc, Document};
 use mongodb::{Collection};
 
 use sha3::{Digest, Sha3_256};
@@ -14,7 +14,7 @@ impl UserService {
         UserService { collection }
     }
 
-    pub async fn login(&self, email: &str, password: &str) -> Option<String> {
+    pub async fn login(&self, email: &str, password: &str) -> Option<Document> {
         let user_res = self
             .collection
             .find_one(doc! {"email": email}, None)
@@ -41,7 +41,8 @@ impl UserService {
             &pw_hash_salt.get(0).unwrap(),
             &pw_hash_salt.get(1).unwrap(),
         ) {
-            return Some(String::from("password_is_correct"));
+         
+            return Some(userobj);
         }
         None
     }

@@ -41,7 +41,7 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
     for i in 0..records_to_insert as usize {
         let (user_password_salt, password_hash) = get_password_and_salt();
         users_collector.append_doc(doc! {
-        "mandant_id": mandant_object,
+        "mandant": {"$ref":  COL_MANDANTS, "$id": mandant_object, "$db": DATABASE},
         "lastname": "Gucker",
         "firstname":"Fritz",
         "email": format!("email_{}@birdwatch.ch", i),

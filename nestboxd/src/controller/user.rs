@@ -19,17 +19,20 @@ pub async fn login_post(
     app_data: web::Data<crate::AppState>,
     login: web::Json<LoginReq>,
 ) -> impl Responder {
-    let password_hash = app_data
+    let user_response = app_data
         .service_container
         .user
         .login(&login.email, &login.password)
         .await;
-    match password_hash {
-        Some(r) => {
+    
+    match user_response {
+        Some(user_obj) => {
             return HttpResponse::Ok().json(LoginRes {
                 email: login.email.clone(),
                 success: true,
-                session: r,
+                session: app_data.service_container
+                .session
+                .create_session(user_obj).await //String::from("n.a."),
             })
         }
         None => {

@@ -3,26 +3,31 @@ use extract_argv::{extract_argv, parse_yaml};
 use mongodb::{options::ClientOptions, Client, Database};
 use service::nestbox::NestboxService;
 use service::user::UserService;
+use service::session::SessionService;
 
 mod controller;
 mod extract_argv;
 mod service;
 
+
 pub struct ServiceContainer {
     db: Database,
     nestbox: NestboxService,
     user: UserService,
+    session: SessionService
 }
 
 impl ServiceContainer {
     pub fn new(db: Database) -> Self {
         let nestboxes_col = db.collection("nestboxes");
         let users_col = db.collection("users");
+        let session_col = db.collection("sessions");
 
         ServiceContainer {
             db,
             nestbox: NestboxService::new(nestboxes_col),
             user: UserService::new(users_col),
+            session: SessionService::new(session_col)
         }
     }
 }
