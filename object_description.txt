@@ -52,4 +52,21 @@ mandant 1 ----- n users
                   |
                   + n ------------- n geolocation
 
+
+
+API draft
+
+Public
+GET  /nestboxes/{uuid}          
+GET  /nestboxes/{uuid}/breeds/  
+
+Secured
+POST /nextboxes/{uuid}/breeds/  
+GET  /mandants/{uuid}/birds/
+POST /mandants/{uuid}/birds/
+PUT  /mandants/{uuid}/birds/                 
+
+
+
+
   

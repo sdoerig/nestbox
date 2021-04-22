@@ -2,7 +2,6 @@ use bson::{doc, Document};
 use futures::executor::block_on;
 use mongodb::{error::Error, Collection};
 
-
 #[derive(Clone)]
 pub struct NestboxService {
     collection: Collection,
