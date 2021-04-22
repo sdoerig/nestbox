@@ -34,7 +34,10 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
     let mut users_collector = Collector::new(database.collection(COL_USERS));
     let mut geolocations_collector = Collector::new(database.collection(COL_GEOLOCATIONS));
     let mut birds_collector = Collector::new(database.collection(COL_BIRDS));
-    mandant_collector.append_doc(doc!{"name": "BirdLife",  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
+    mandant_collector.append_doc(doc! { "uuid": Uuid::new_v4().to_string(),
+    "name": "BirdLife",
+    "website": "https://www.birdwatcher.ch",
+    "email": "bird@iseeyou.ch"});
     mandant_collector.flush();
     let mut mandant_object = mandant_collector.result.get(&0).unwrap();
     gen_birds_for_mandant(&mut birds_collector, mandant_object);
@@ -42,6 +45,8 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
         let (user_password_salt, password_hash) = get_password_and_salt();
         users_collector.append_doc(doc! {
         "mandant": {"$ref":  COL_MANDANTS, "$id": mandant_object, "$db": DATABASE},
+        "username": format!("fg_{}", i),
+        "uuid": Uuid::new_v4().to_string(),
         "lastname": "Gucker",
         "firstname":"Fritz",
         "email": format!("email_{}@birdwatch.ch", i),
@@ -64,7 +69,8 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
         }
         if i % 100 == 0 {
             mandant_collector.append_doc(
-                doc!{"name": format!("BirdLife {}", i),  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
+                doc!{ "uuid": Uuid::new_v4().to_string(), 
+                    "name": format!("BirdLife {}", i),  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
             mandant_collector.flush();
             mandant_object = mandant_collector.result.get(&0).unwrap();
             gen_birds_for_mandant(&mut birds_collector, mandant_object);
@@ -86,9 +92,10 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
 
 fn gen_birds_for_mandant(birds_collector: &mut Collector, mandant_object: &Bson) {
     for b in 0..150 {
-        birds_collector
-            .append_doc(doc! {"bird": format!("bird_{}", b), "mandant": 
-            {"$ref": COL_MANDANTS, "$id": mandant_object, "$db": DATABASE}});
+        birds_collector.append_doc(
+            doc! { "uuid": Uuid::new_v4().to_string(), "bird": format!("bird_{}", b), "mandant":
+            {"$ref": COL_MANDANTS, "$id": mandant_object, "$db": DATABASE}},
+        );
     }
     birds_collector.flush();
 }
@@ -115,18 +122,18 @@ fn generate_nestboxes_additionals(
         for _b in 0..6 {
             let longitude = random_longitude(-180.0, 180.0);
             let latitude = random_latitude(-90.0, 90.0);
-            geolocations_collector.append_doc(
-                doc! {"nestbox": {"$ref":  COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
-                "from_date": 0,
-                "until_date": 0,
-                "position": {"type": "point", "coordinates": [ longitude, latitude ]}},
-            );
+            geolocations_collector.append_doc(doc! { "uuid": Uuid::new_v4().to_string(),
+            "nestbox": {"$ref":  COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
+            "from_date": 0,
+            "until_date": 0,
+            "position": {"type": "point", "coordinates": [ longitude, latitude ]}});
             breeds_collector.append_doc(doc! {
-            "nestbox": {"$ref": COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
-            "user": {"$ref": COL_USERS, "$id": user_object, "$db": DATABASE},
-            "discovery_date": Utc::now(),
-            "bird": {"$ref": COL_BIRDS,
-                "$id": birds_collector.result.get(&(_c % number_of_birds)).unwrap(), 
+                "uuid": Uuid::new_v4().to_string(),
+                "nestbox": {"$ref": COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
+                "user": {"$ref": COL_USERS, "$id": user_object, "$db": DATABASE},
+                "discovery_date": Utc::now(),
+                "bird": {"$ref": COL_BIRDS,
+                "$id": birds_collector.result.get(&(_c % number_of_birds)).unwrap(),
                 "$db": DATABASE}});
         }
     }

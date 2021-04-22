@@ -4,12 +4,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct LoginReq {
-    pub email: String,
+    pub username: String,
     pub password: String,
 }
 #[derive(Deserialize, Serialize)]
 pub struct LoginRes {
-    pub email: String,
+    pub username: String,
     pub success: bool,
     pub session: String,
 }
@@ -22,13 +22,13 @@ pub async fn login_post(
     let user_response = app_data
         .service_container
         .user
-        .login(&login.email, &login.password)
+        .login(&login.username, &login.password)
         .await;
     
     match user_response {
         Some(user_obj) => {
             return HttpResponse::Ok().json(LoginRes {
-                email: login.email.clone(),
+                username: login.username.clone(),
                 success: true,
                 session: app_data.service_container
                 .session
@@ -36,8 +36,9 @@ pub async fn login_post(
             })
         }
         None => {
+            app_data.service_container.session.remove_session_by_username(&login.username).await;
             return HttpResponse::Ok().json(LoginRes {
-                email: login.email.clone(),
+                username: login.username.clone(),
                 success: false,
                 session: String::from("n.a."),
             })

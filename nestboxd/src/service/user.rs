@@ -14,10 +14,10 @@ impl UserService {
         UserService { collection }
     }
 
-    pub async fn login(&self, email: &str, password: &str) -> Option<Document> {
+    pub async fn login(&self, username: &str, password: &str) -> Option<Document> {
         let user_res = self
             .collection
-            .find_one(doc! {"email": email}, None)
+            .find_one(doc! {"username": username}, None)
             .await
             .ok()?;
         //block_on(user_res);
