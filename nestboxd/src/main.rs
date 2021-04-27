@@ -4,6 +4,7 @@ use mongodb::{options::ClientOptions, Client, Database};
 use service::nestbox::NestboxService;
 use service::user::UserService;
 use service::session::SessionService;
+use service::breed::BreedService;
 
 mod controller;
 mod extract_argv;
@@ -14,7 +15,8 @@ pub struct ServiceContainer {
     db: Database,
     nestbox: NestboxService,
     user: UserService,
-    session: SessionService
+    session: SessionService,
+    breed: BreedService
 }
 
 impl ServiceContainer {
@@ -22,12 +24,13 @@ impl ServiceContainer {
         let nestboxes_col = db.collection("nestboxes");
         let users_col = db.collection("users");
         let session_col = db.collection("sessions");
-
+        let breed_col = db.collection("breeds");
         ServiceContainer {
             db,
             nestbox: NestboxService::new(nestboxes_col),
             user: UserService::new(users_col),
-            session: SessionService::new(session_col)
+            session: SessionService::new(session_col),
+            breed: BreedService::new(breed_col)
         }
     }
 }
