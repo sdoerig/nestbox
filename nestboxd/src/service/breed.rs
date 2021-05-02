@@ -1,9 +1,7 @@
-use futures::stream::StreamExt;
-use mongodb::{
-     bson::{doc, Document},
-     error::Result,
-     Client, Collection
-};
+use bson::{doc, Document};
+
+use futures::{FutureExt, executor::block_on};
+use mongodb::{Collection, Cursor, error::Error};
 
 #[derive(Clone)]
 pub struct BreedService {
@@ -15,14 +13,10 @@ impl BreedService {
         BreedService { collection }
     }
 
-    pub async fn get_by_nestbox(&self, nestbox: &Document) {
-        let res = self.collection.find(Some(doc! {"nestbox.$id": nestbox.get("_id").unwrap()}), None).await;
-        let cursor = match res {
-            Ok(c) => c,
-            Err(e) => return
-        };
-        let results: Vec<Result<Document>> = cursor.collect().await;
-        
+    pub fn get_by_nestbox(&self, nestbox: &Document) -> Result<Cursor<Document>, Error> {
+        let mut results_doc: Vec<Document> = Vec::new();
+        let res = self.collection.find(Some(doc! {"nestbox.$id": nestbox.get("_id").unwrap()}), None);
+        block_on(res)
         
        
     }
