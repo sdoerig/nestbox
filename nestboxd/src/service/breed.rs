@@ -14,8 +14,8 @@ impl BreedService {
     }
 
     pub fn get_by_nestbox(&self, nestbox: &Document) -> Result<Cursor<Document>, Error> {
-        let mut results_doc: Vec<Document> = Vec::new();
-        let res = self.collection.find(Some(doc! {"nestbox.$id": nestbox.get("_id").unwrap()}), None);
+        //let mut results_doc: Vec<Document> = Vec::new();
+        let res = self.collection.find(doc! {"nestbox.$id": nestbox.get("_id").unwrap()}, None);
         block_on(res)
         
        

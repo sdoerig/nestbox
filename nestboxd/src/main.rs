@@ -59,6 +59,7 @@ async fn main() -> std::io::Result<()> {
             .data(AppState { service_container })
             .service(controller::nestbox::nestboxes_get)
             .service(controller::user::login_post)
+            .service(controller::breed::breeds_get)
     })
     .bind(server_http_bind)?
     .run()
