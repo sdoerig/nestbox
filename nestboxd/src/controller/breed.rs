@@ -1,14 +1,10 @@
+use crate::service::breed::{BreedService};
 use actix_web::{get, web, HttpResponse, Responder};
-use bson::Document;
-use futures::StreamExt;
-use mongodb::error::Error;
-use serde::{Deserialize};
-use crate::service::breed::BreedService;
+use serde::Deserialize;
 #[derive(Deserialize)]
 pub struct BreedReq {
     uuid: String,
 }
-
 
 #[get("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_get(
@@ -17,7 +13,7 @@ pub async fn breeds_get(
 ) -> impl Responder {
     let breed_col = BreedService::new(app_data.service_container.db.collection("breeds"));
 
-    let nestbox_result =  web::block(move || {
+    let nestbox_result = web::block(move || {
         app_data
             .service_container
             .nestbox
@@ -29,19 +25,7 @@ pub async fn breeds_get(
         Err(_e) => return HttpResponse::NotFound().finish(),
     };
 
-    let breeds = web::block(move || {breed_col.get_by_nestbox(&nestbox)}).await;
-    let mut breeds_doc: Vec<Document> = Vec::new();
-    let cursor = match breeds {
-        Ok(c) => c,
-        Err(_e) => return HttpResponse::NotFound().finish()
-    };
-    // cursor.collect::<Document>(); // how to fetch the Documents here?
-    let results: Vec<Result<Document, Error>> = cursor.collect().await;
-    for r in results {
-        match r {
-            Ok(d) => breeds_doc.push(d),
-            Err(_e) => return HttpResponse::NotFound().finish()
-        }
-    }
-    HttpResponse::Ok().json(breeds_doc)
+    let breeds = breed_col.get_by_nestbox(&nestbox).await;
+
+    HttpResponse::Ok().json(breeds)
 }
