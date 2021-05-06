@@ -7,7 +7,7 @@
 //!
 //!
 use chrono::prelude::*;
-use mongodb::bson::{doc, Bson};
+use mongodb::bson::{doc};
 use mongodb::sync::Client;
 use rand::Rng;
 use sha3::{Digest, Sha3_256};
@@ -40,11 +40,12 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
     "email": "bird@iseeyou.ch"});
     mandant_collector.flush();
     let mut mandant_object = mandant_collector.result.get(&0).unwrap();
-    gen_birds_for_mandant(&mut birds_collector, mandant_object);
+    let mut mandant_uuid = mandant_collector.uuids.get(0).unwrap().clone();
+    gen_birds_for_mandant(&mut birds_collector, &mandant_uuid);
     for i in 0..records_to_insert as usize {
         let (user_password_salt, password_hash) = get_password_and_salt();
         users_collector.append_doc(doc! {
-        "mandant": {"$ref":  COL_MANDANTS, "$id": mandant_object, "$db": DATABASE},
+        "mandant_uuid": &mandant_uuid,
         "username": format!("fg_{}", i),
         "uuid": Uuid::new_v4().to_string(),
         "lastname": "Gucker",
@@ -53,7 +54,7 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
         "password_hash": password_hash,
         "salt": user_password_salt.to_string()});
         let nestbox_flushed = match nestboxes_collector.append_doc(
-            doc! {"public": true, "uuid": Uuid::new_v4().to_string(), "mandant": mandant_object, "created_at": Utc::now()},
+            doc! {"public": true, "uuid": Uuid::new_v4().to_string(), "mandant_uuid": &mandant_uuid, "created_at": Utc::now()},
         ) {
             CollectorState::Flushed => true,
             CollectorState::Accumulating => false,
@@ -72,8 +73,9 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
                 doc!{ "uuid": Uuid::new_v4().to_string(), 
                     "name": format!("BirdLife {}", i),  "website": "https://www.birdwatcher.ch", "email": "bird@iseeyou.ch"});
             mandant_collector.flush();
+            mandant_uuid = mandant_collector.uuids.get(0).unwrap().clone();
             mandant_object = mandant_collector.result.get(&0).unwrap();
-            gen_birds_for_mandant(&mut birds_collector, mandant_object);
+            gen_birds_for_mandant(&mut birds_collector, &mandant_uuid);
         }
     }
     nestboxes_collector.flush();
@@ -90,11 +92,10 @@ pub fn populate_db(db_uri: &str, records_to_insert: i32) -> mongodb::error::Resu
     Ok(())
 }
 
-fn gen_birds_for_mandant(birds_collector: &mut Collector, mandant_object: &Bson) {
+fn gen_birds_for_mandant(birds_collector: &mut Collector, mandant_uuid: &str) {
     for b in 0..150 {
         birds_collector.append_doc(
-            doc! { "uuid": Uuid::new_v4().to_string(), "bird": format!("bird_{}", b), "mandant":
-            {"$ref": COL_MANDANTS, "$id": mandant_object, "$db": DATABASE}},
+            doc! { "uuid": Uuid::new_v4().to_string(), "bird": format!("bird_{}", b), "mandant_uuid": mandant_uuid},
         );
     }
     birds_collector.flush();
@@ -117,24 +118,23 @@ fn generate_nestboxes_additionals(
     breeds_collector: &mut Collector,
 ) {
     let number_of_birds = birds_collector.result.len();
-    for (_c, nestbox_object) in nestboxes_collector.result.iter() {
-        let user_object = users_collector.result.get(&_c).unwrap();
+    let _c: usize = 0;
+    for nestbox_uuid in nestboxes_collector.uuids.iter() {
+        let user_uuid = users_collector.uuids.get(_c).unwrap();
         for _b in 0..6 {
             let longitude = random_longitude(-180.0, 180.0);
             let latitude = random_latitude(-90.0, 90.0);
             geolocations_collector.append_doc(doc! { "uuid": Uuid::new_v4().to_string(),
-            "nestbox": {"$ref":  COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
+            "nestbox_uuid": &nestbox_uuid,
             "from_date": 0,
             "until_date": 0,
             "position": {"type": "point", "coordinates": [ longitude, latitude ]}});
             breeds_collector.append_doc(doc! {
-                "uuid": Uuid::new_v4().to_string(),
-                "nestbox": {"$ref": COL_NESTBOXES, "$id": nestbox_object, "$db": DATABASE},
-                "user": {"$ref": COL_USERS, "$id": user_object, "$db": DATABASE},
-                "discovery_date": Utc::now(),
-                "bird": {"$ref": COL_BIRDS,
-                "$id": birds_collector.result.get(&(_c % number_of_birds)).unwrap(),
-                "$db": DATABASE}});
+            "uuid": Uuid::new_v4().to_string(),
+            "nestbox_uuid": &nestbox_uuid,
+            "user_uuid": &user_uuid,
+            "discovery_date": Utc::now(),
+            "bird_uuid": birds_collector.uuids.get(_c % number_of_birds).unwrap()});
         }
     }
 }
