@@ -20,13 +20,13 @@ impl BreedService {
         BreedService { collection }
     }
 
-    pub async fn get_by_nestbox(&self, nestbox: &Document) -> DocumentResponse {
+    pub async fn get_by_nestbox_uuid(&self, nestbox_uuid: &str) -> DocumentResponse {
         //let mut results_doc: Vec<Document> = Vec::new();
         let res = self
             .collection
-            .find(doc! {"nestbox.$id": nestbox.get("_id").unwrap()}, None);
+            .find(doc! {"nestbox_uuid": nestbox_uuid}, None);
         let blocked_res = block_on(res);
-        let counted_documents_res = self.get_by_nestbox_count(nestbox).await;
+        let counted_documents_res = self.get_by_nestbox_count(nestbox_uuid).await;
 
         let mut documents: Vec<Document> = Vec::new();
         let result_documents = match blocked_res {
@@ -51,9 +51,9 @@ impl BreedService {
         }
     }
 
-    pub async fn get_by_nestbox_count(&self, nestbox: &Document) -> Result<i64, Error> {
+    pub async fn get_by_nestbox_count(&self, nestbox_uuid: &str) -> Result<i64, Error> {
         self.collection
-            .count_documents(doc! {"nestbox.$id": nestbox.get("_id").unwrap()}, None)
+            .count_documents(doc! {"nestbox_uuid": nestbox_uuid}, None)
             .await
     }
 }
