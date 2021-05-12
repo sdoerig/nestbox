@@ -1,9 +1,9 @@
 use bson::{doc, Document};
 
-use futures::{executor::block_on, StreamExt};
-use mongodb::{error::Error, Collection, options::FindOptions};
-use serde::Serialize;
 use crate::controller::breed::{BreedReq, PagingQuery};
+use futures::{executor::block_on, StreamExt};
+use mongodb::{error::Error, options::FindOptions, Collection};
+use serde::Serialize;
 
 #[derive(Clone)]
 pub struct BreedService {
@@ -14,6 +14,20 @@ pub struct BreedService {
 pub struct DocumentResponse {
     pub documents: Vec<Document>,
     pub counted_documents: i64,
+    pub pages: i64,
+    pub page_number: i64,
+    pub page_limit: i64
+}
+
+impl DocumentResponse {
+    pub fn new(documents: Vec<Document>, counted_documents: i64, paging: &PagingQuery) -> Self {
+        let pages = if counted_documents % paging.page_limit > 0 {
+            counted_documents / paging.page_limit + 1
+        } else {
+            counted_documents / paging.page_limit
+        };
+        DocumentResponse{documents, counted_documents, pages, page_number: paging.page_number, page_limit: paging.page_limit}
+    }
 }
 
 impl BreedService {
@@ -21,11 +35,16 @@ impl BreedService {
         BreedService { collection }
     }
 
-    pub async fn get_by_nestbox_uuid(&self, req: &BreedReq, paging: &PagingQuery) -> DocumentResponse {
+    pub async fn get_by_nestbox_uuid(
+        &self,
+        req: &BreedReq,
+        paging: &PagingQuery,
+    ) -> DocumentResponse {
         //let mut results_doc: Vec<Document> = Vec::new();
         let find_options = FindOptions::builder()
-        .limit(Some(paging.page_limit)).skip(Some(paging.page_limit * paging.page_number))
-        .build();
+            .limit(Some(paging.page_limit))
+            .skip(Some(paging.page_limit * (paging.page_number - 1)))
+            .build();
         let res = self
             .collection
             .find(doc! {"nestbox_uuid": &req.uuid}, find_options);
@@ -49,10 +68,8 @@ impl BreedService {
             Err(_e) => 0,
         };
 
-        DocumentResponse {
-            documents,
-            counted_documents,
-        }
+        
+        DocumentResponse::new(documents, counted_documents, paging)
     }
 
     pub async fn get_by_nestbox_count(&self, nestbox_uuid: &str) -> Result<i64, Error> {
