@@ -16,7 +16,7 @@ pub struct DocumentResponse {
     pub counted_documents: i64,
     pub pages: i64,
     pub page_number: i64,
-    pub page_limit: i64
+    pub page_limit: i64,
 }
 
 impl DocumentResponse {
@@ -26,7 +26,13 @@ impl DocumentResponse {
         } else {
             counted_documents / paging.page_limit
         };
-        DocumentResponse{documents, counted_documents, pages, page_number: paging.page_number, page_limit: paging.page_limit}
+        DocumentResponse {
+            documents,
+            counted_documents,
+            pages,
+            page_number: paging.page_number,
+            page_limit: paging.page_limit,
+        }
     }
 }
 
@@ -68,7 +74,6 @@ impl BreedService {
             Err(_e) => 0,
         };
 
-        
         DocumentResponse::new(documents, counted_documents, paging)
     }
 

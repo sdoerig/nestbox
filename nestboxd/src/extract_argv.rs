@@ -60,9 +60,9 @@ mod tests {
 
     use super::*;
 
-    //#[test]
+    #[test]
     fn test_config() {
-        let config = parse_yaml(String::from("../../nestboxd_conf.yaml"));
+        let config = parse_yaml(String::from("nestboxd_conf.yaml"));
         assert_eq!(config.httpserver_ip, String::from("127.0.0.1"));
     }
 }
