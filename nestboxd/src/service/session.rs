@@ -1,11 +1,13 @@
 use bson::{doc, Document};
-use mongodb::Collection;
+use mongodb::{Collection, error::Error};
 use uuid::Uuid;
+use crate::controller::utilities::SessionObject;
 
 #[derive(Clone)]
 pub struct SessionService {
     collection: Collection,
 }
+
 
 impl SessionService {
     pub fn new(collection: Collection) -> SessionService {
@@ -42,4 +44,13 @@ impl SessionService {
             .delete_many(doc! {"username": username}, None)
             .await;
     }
+
+    pub async fn validate_session(&self, token: &str) -> SessionObject {
+        
+        let session_obj = self.collection.find_one(doc!{"session_key": token.replace("Basic ", "")}, None).await;
+
+        SessionObject::new(session_obj)
+
+    }
+
 }

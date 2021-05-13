@@ -1,22 +1,21 @@
-use actix_web::{App, HttpServer};
+use actix_web::{middleware::Logger, App, HttpServer};
 use extract_argv::{extract_argv, parse_yaml};
 use mongodb::{options::ClientOptions, Client, Database};
-use service::nestbox::NestboxService;
-use service::user::UserService;
-use service::session::SessionService;
 use service::breed::BreedService;
+use service::nestbox::NestboxService;
+use service::session::SessionService;
+use service::user::UserService;
 
 mod controller;
 mod extract_argv;
 mod service;
-
 
 pub struct ServiceContainer {
     db: Database,
     nestbox: NestboxService,
     user: UserService,
     session: SessionService,
-    breed: BreedService
+    breed: BreedService,
 }
 
 impl ServiceContainer {
@@ -30,7 +29,7 @@ impl ServiceContainer {
             nestbox: NestboxService::new(nestboxes_col),
             user: UserService::new(users_col),
             session: SessionService::new(session_col),
-            breed: BreedService::new(breed_col)
+            breed: BreedService::new(breed_col),
         }
     }
 }
@@ -51,7 +50,7 @@ async fn main() -> std::io::Result<()> {
         .unwrap();
     let client = Client::with_options(client_options).unwrap();
     let db = client.database(&config_struct.mongodb_database);
-
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     HttpServer::new(move || {
         let service_container = ServiceContainer::new(db.clone());
 
@@ -60,6 +59,8 @@ async fn main() -> std::io::Result<()> {
             .service(controller::nestbox::nestboxes_get)
             .service(controller::user::login_post)
             .service(controller::breed::breeds_get)
+            .service(controller::bird::birds_get)
+            .wrap(Logger::default())
     })
     .bind(server_http_bind)?
     .run()
