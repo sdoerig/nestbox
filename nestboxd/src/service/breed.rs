@@ -1,40 +1,16 @@
 use bson::{doc, Document};
 
-use crate::controller::breed::{BreedReq, PagingQuery};
+use crate::controller::breed::{BreedReq};
+use crate::controller::utilities::{DocumentResponse, PagingQuery};
 use futures::{executor::block_on, StreamExt};
-use mongodb::{error::Error, options::FindOptions, Collection};
-use serde::Serialize;
+use mongodb::{Collection, error::Error, options::{AggregateOptions, FindOptions}};
+use super::service_helper as sa;
 
 #[derive(Clone)]
 pub struct BreedService {
     collection: Collection,
 }
 
-#[derive(Serialize)]
-pub struct DocumentResponse {
-    pub documents: Vec<Document>,
-    pub counted_documents: i64,
-    pub pages: i64,
-    pub page_number: i64,
-    pub page_limit: i64,
-}
-
-impl DocumentResponse {
-    pub fn new(documents: Vec<Document>, counted_documents: i64, paging: &PagingQuery) -> Self {
-        let pages = if counted_documents % paging.page_limit > 0 {
-            counted_documents / paging.page_limit + 1
-        } else {
-            counted_documents / paging.page_limit
-        };
-        DocumentResponse {
-            documents,
-            counted_documents,
-            pages,
-            page_number: paging.page_number,
-            page_limit: paging.page_limit,
-        }
-    }
-}
 
 impl BreedService {
     pub fn new(collection: Collection) -> BreedService {
@@ -46,29 +22,19 @@ impl BreedService {
         req: &BreedReq,
         paging: &PagingQuery,
     ) -> DocumentResponse {
-        //let mut results_doc: Vec<Document> = Vec::new();
-        let find_options = FindOptions::builder()
-            .limit(Some(paging.page_limit))
-            .skip(Some(paging.page_limit * (paging.page_number - 1)))
-            .build();
+        
         let res = self
             .collection
-            .find(doc! {"nestbox_uuid": &req.uuid}, find_options);
-        let blocked_res = block_on(res);
+            .aggregate(vec! [
+                doc! {"$match": {"nestbox_uuid": {"$eq": &req.uuid}}}, 
+                doc! {"$skip": (paging.page_limit * (paging.page_number -1))}, 
+                doc!{"$limit": paging.page_limit}, 
+                doc!{"$lookup": {"from": "birds", "localField": "bird_uuid", "foreignField": "uuid", "as": "bird"}}], None);
         let counted_documents_res = self.get_by_nestbox_count(&req.uuid).await;
 
-        let mut documents: Vec<Document> = Vec::new();
-        let result_documents = match blocked_res {
-            Ok(c) => c.collect().await,
-            Err(_e) => Vec::new(),
-        };
+        let blocked_res = block_on(res);
 
-        for r in result_documents {
-            match r {
-                Ok(d) => documents.push(d),
-                Err(_e) => continue,
-            }
-        }
+       let documents = sa::read_mongodb_cursor(blocked_res).await;
         let counted_documents = match counted_documents_res {
             Ok(i) => i,
             Err(_e) => 0,
@@ -83,3 +49,4 @@ impl BreedService {
             .await
     }
 }
+

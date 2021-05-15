@@ -2,7 +2,7 @@ use bson::Document;
 use mongodb::{error::Error, Collection};
 use serde::Deserialize;
 
-use crate::service::user;
+use serde::Serialize;
 
 const MAX_PAGE_LIMIT: i64 = 100;
 
@@ -41,7 +41,7 @@ impl SessionObject {
                 Some(d) => d,
                 None => Document::new(),
             },
-            Err(e) => Document::new(),
+            Err(_e) => Document::new(),
         };
         if session_document.is_empty() {
             // invalid session - so return - does not make sense to go any further...
@@ -74,5 +74,32 @@ impl SessionObject {
 
     pub fn get_session_key(&self) -> &str {
         self.session_key.as_str()
+    }
+}
+
+
+#[derive(Serialize)]
+pub struct DocumentResponse {
+    pub documents: Vec<Document>,
+    pub counted_documents: i64,
+    pub pages: i64,
+    pub page_number: i64,
+    pub page_limit: i64,
+}
+
+impl DocumentResponse {
+    pub fn new(documents: Vec<Document>, counted_documents: i64, paging: &PagingQuery) -> Self {
+        let pages = if counted_documents % paging.page_limit > 0 {
+            counted_documents / paging.page_limit + 1
+        } else {
+            counted_documents / paging.page_limit
+        };
+        DocumentResponse {
+            documents,
+            counted_documents,
+            pages,
+            page_number: paging.page_number,
+            page_limit: paging.page_limit,
+        }
     }
 }
