@@ -75,8 +75,12 @@ impl SessionObject {
     pub fn get_session_key(&self) -> &str {
         self.session_key.as_str()
     }
-}
 
+    pub fn is_valid_session(&self) -> bool {
+        self.valid_session
+    }
+
+}
 
 #[derive(Serialize)]
 pub struct DocumentResponse {

@@ -1,16 +1,15 @@
-use bson::{doc, Document};
+use bson::doc;
 
-use crate::controller::breed::{BreedReq};
-use crate::controller::utilities::{DocumentResponse, PagingQuery};
-use futures::{executor::block_on, StreamExt};
-use mongodb::{Collection, error::Error, options::{AggregateOptions, FindOptions}};
 use super::service_helper as sa;
+use crate::controller::{breed::BreedReq, utilities::SessionObject};
+use crate::controller::utilities::{DocumentResponse, PagingQuery};
+use futures::executor::block_on;
+use mongodb::{error::Error, Collection};
 
 #[derive(Clone)]
 pub struct BreedService {
     collection: Collection,
 }
-
 
 impl BreedService {
     pub fn new(collection: Collection) -> BreedService {
@@ -19,22 +18,28 @@ impl BreedService {
 
     pub async fn get_by_nestbox_uuid(
         &self,
+        session_obj: &SessionObject,
         req: &BreedReq,
         paging: &PagingQuery,
     ) -> DocumentResponse {
-        
+        let mut projection = doc!{"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0}};
+        if session_obj.is_valid_session() {
+            projection = doc!{"$project": {"_id": 0, "mandant_uuid": 0}};
+        }
         let res = self
             .collection
             .aggregate(vec! [
-                doc! {"$match": {"nestbox_uuid": {"$eq": &req.uuid}}}, 
-                doc! {"$skip": (paging.page_limit * (paging.page_number -1))}, 
+                doc!{"$match": {"nestbox_uuid": {"$eq": &req.uuid}}}, 
+                doc!{"$skip": (paging.page_limit * (paging.page_number -1))}, 
                 doc!{"$limit": paging.page_limit}, 
-                doc!{"$lookup": {"from": "birds", "localField": "bird_uuid", "foreignField": "uuid", "as": "bird"}}], None);
+                doc!{"$lookup": {"from": "birds", "localField": "bird_uuid", "foreignField": "uuid", "as": "bird"}},
+                projection
+                ], None);
         let counted_documents_res = self.get_by_nestbox_count(&req.uuid).await;
 
         let blocked_res = block_on(res);
 
-       let documents = sa::read_mongodb_cursor(blocked_res).await;
+        let documents = sa::read_mongodb_cursor(blocked_res).await;
         let counted_documents = match counted_documents_res {
             Ok(i) => i,
             Err(_e) => 0,
@@ -49,4 +54,3 @@ impl BreedService {
             .await
     }
 }
-

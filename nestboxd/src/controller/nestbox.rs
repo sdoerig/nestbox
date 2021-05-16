@@ -27,4 +27,3 @@ pub async fn nestboxes_get(
         Err(_e) => HttpResponse::NotFound().finish(),
     }
 }
-

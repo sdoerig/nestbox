@@ -1,13 +1,15 @@
-use bson::{doc, Document};
-use mongodb::{Collection, error::Error};
-use uuid::Uuid;
 use crate::controller::utilities::SessionObject;
+use actix_web::HttpRequest;
+use bson::{doc, Document};
+use mongodb::{Collection};
+use uuid::Uuid;
+
+const HTTP_AUTHORIZATION: &str = "Authorization";
 
 #[derive(Clone)]
 pub struct SessionService {
     collection: Collection,
 }
-
 
 impl SessionService {
     pub fn new(collection: Collection) -> SessionService {
@@ -45,12 +47,19 @@ impl SessionService {
             .await;
     }
 
-    pub async fn validate_session(&self, token: &str) -> SessionObject {
-        
-        let session_obj = self.collection.find_one(doc!{"session_key": token.replace("Basic ", "")}, None).await;
+    pub async fn validate_session(&self, http_req: &HttpRequest) -> SessionObject {
+        let session_token = match http_req.headers().get(HTTP_AUTHORIZATION) {
+            Some(t) => t.to_str(),
+            None => Ok("n.a."),
+        };
+        let session_obj = self
+            .collection
+            .find_one(
+                doc! {"session_key": session_token.unwrap().replace("Basic ", "")},
+                None,
+            )
+            .await;
 
         SessionObject::new(session_obj)
-
     }
-
 }

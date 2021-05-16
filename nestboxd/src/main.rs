@@ -5,6 +5,7 @@ use service::breed::BreedService;
 use service::nestbox::NestboxService;
 use service::session::SessionService;
 use service::user::UserService;
+use service::bird::BirdService;
 
 mod controller;
 mod extract_argv;
@@ -16,6 +17,7 @@ pub struct ServiceContainer {
     user: UserService,
     session: SessionService,
     breed: BreedService,
+    bird: BirdService
 }
 
 impl ServiceContainer {
@@ -23,13 +25,15 @@ impl ServiceContainer {
         let nestboxes_col = db.collection("nestboxes");
         let users_col = db.collection("users");
         let session_col = db.collection("sessions");
-        let breed_col = db.collection("breeds");
+        let breed_col = db.collection("breeds");        
+        let bird_col = db.collection("birds");
         ServiceContainer {
             db,
             nestbox: NestboxService::new(nestboxes_col),
             user: UserService::new(users_col),
             session: SessionService::new(session_col),
             breed: BreedService::new(breed_col),
+            bird: BirdService::new(bird_col)
         }
     }
 }
