@@ -1,8 +1,8 @@
 use bson::doc;
 
 use super::service_helper as sa;
-use crate::controller::{breed::BreedReq, utilities::SessionObject};
 use crate::controller::utilities::{DocumentResponse, PagingQuery};
+use crate::controller::{breed::BreedReq, utilities::SessionObject};
 use futures::executor::block_on;
 use mongodb::{error::Error, Collection};
 
@@ -22,19 +22,39 @@ impl BreedService {
         req: &BreedReq,
         paging: &PagingQuery,
     ) -> DocumentResponse {
-        let mut projection = doc!{"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0}};
+        let mut projection = doc! {"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0, "bird_uuid": 0}};
         if session_obj.is_valid_session() {
-            projection = doc!{"$project": {"_id": 0, "mandant_uuid": 0}};
+            projection = doc! {"$project": {"_id": 0, "mandant_uuid": 0, "bird_uuid": 0}};
         }
-        let res = self
-            .collection
-            .aggregate(vec! [
-                doc!{"$match": {"nestbox_uuid": {"$eq": &req.uuid}}}, 
-                doc!{"$skip": (paging.page_limit * (paging.page_number -1))}, 
-                doc!{"$limit": paging.page_limit}, 
-                doc!{"$lookup": {"from": "birds", "localField": "bird_uuid", "foreignField": "uuid", "as": "bird"}},
-                projection
-                ], None);
+        let res = self.collection.aggregate(
+            vec![
+                doc! {"$match": {"nestbox_uuid": {"$eq": &req.uuid}}},
+                doc! {"$skip": (paging.page_limit * (paging.page_number -1))},
+                doc! {"$limit": paging.page_limit},
+                doc! {"$lookup": {
+                "from": "birds",
+                "let": {
+                  "breeds_bird_uuid": "$bird_uuid" },
+                "pipeline":[
+                  {
+                    "$match": {
+                      "$expr": {
+                        "$eq": [
+                          "$$breeds_bird_uuid", "$uuid"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "$project": {
+                       "_id":0, "uuid": 1, "bird": 1
+                    }
+                  }
+                ], "as": "bird"}},
+                projection,
+            ],
+            None,
+        );
         let counted_documents_res = self.get_by_nestbox_count(&req.uuid).await;
 
         let blocked_res = block_on(res);
