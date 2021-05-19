@@ -7,7 +7,7 @@
 //!
 //!
 use chrono::prelude::*;
-use mongodb::bson::{doc};
+use mongodb::bson::doc;
 use mongodb::sync::Client;
 use rand::Rng;
 use sha3::{Digest, Sha3_256};
@@ -117,10 +117,10 @@ fn generate_nestboxes_additionals(
     geolocations_collector: &mut Collector,
     breeds_collector: &mut Collector,
 ) {
-    let number_of_birds = birds_collector.result.len();
-    let _c: usize = 0;
-    for nestbox_uuid in nestboxes_collector.uuids.iter() {
-        let user_uuid = users_collector.uuids.get(_c).unwrap();
+    let number_of_birds = birds_collector.uuids.len();
+    let mut rng = rand::thread_rng();
+    for (c, nestbox_uuid) in nestboxes_collector.uuids.iter().enumerate() {
+        let user_uuid = users_collector.uuids.get(c).unwrap();
         for _b in 0..6 {
             let longitude = random_longitude(-180.0, 180.0);
             let latitude = random_latitude(-90.0, 90.0);
@@ -134,7 +134,7 @@ fn generate_nestboxes_additionals(
             "nestbox_uuid": &nestbox_uuid,
             "user_uuid": &user_uuid,
             "discovery_date": Utc::now(),
-            "bird_uuid": birds_collector.uuids.get(_c % number_of_birds).unwrap()});
+            "bird_uuid": birds_collector.uuids.get(rng.gen_range(0..number_of_birds)).unwrap()});
         }
     }
 }
