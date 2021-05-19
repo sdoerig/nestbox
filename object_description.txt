@@ -62,9 +62,38 @@ GET  /nestboxes/{uuid}/breeds/
 
 Secured
 POST /nextboxes/{uuid}/breeds/  
-GET  /mandants/{uuid}/birds/
-POST /mandants/{uuid}/birds/
-PUT  /mandants/{uuid}/birds/                 
+GET  /mandants/birds/
+POST /mandants/birds/
+PUT  /mandants/birds/ 
+
+
+MongoDB
+- Indexes
+  db.mandants.createIndex({"uuid": 1}, {"unique": true}
+  db.nestboxes.createIndex({"uuid": 1}, {"unique": true})
+  db.breeds.createIndex({"uuid": 1}, {"unique": true}
+  db.breeds.createIndex({"nestbox_uuid": 1})
+  db.users.createIndex({"uuid": 1}, {"unique": true})
+  db.users.createIndex({"username": 1}, {"unique": true})
+  db.geolocations.createIndex({"uuid": 1}, {"unique": true})
+  db.birds.createIndex({"uuid": 1}, {"unique": true})
+  db.birds.createIndex({"mandant_uuid": 1})
+  
+
+  db.geolocations.createIndex({"nestbox_uuid": 1})
+  db.nestboxes.createIndex({"mandant_uuid":1})
+
+ curl
+ - login
+   curl --header "Content-Type: application/json" --request POST --data '{"username":"fg_1990","password":"secretbird"}' http://127.0.0.1:8080/login
+   curl  http://127.0.0.1:8080/nestboxes/ea492bf7-445c-4727-80a5-8f55f9f40fa5/breeds?page_limit=20\&page_number=1
+   curl  http://127.0.0.1:8080/nestboxes/ea492bf7-445c-4727-80a5-8f55f9f40fa5?page_limit=20\&page_number=1
+   curl -H "Authorization: Basic 2c78d78b-fc9f-4e0f-b074-2af4709f25ec" http://127.0.0.1:8080/birds?page_limit=100\&page_number=1
+
+
+
+
+
 
 
 
