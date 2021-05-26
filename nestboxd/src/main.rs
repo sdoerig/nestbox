@@ -64,6 +64,7 @@ async fn main() -> std::io::Result<()> {
             .service(controller::user::login_post)
             .service(controller::breed::breeds_get)
             .service(controller::bird::birds_get)
+            .service(controller::breed::breeds_post)
             .wrap(Logger::default())
     })
     .bind(server_http_bind)?
