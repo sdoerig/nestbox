@@ -1,6 +1,8 @@
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
+use super::error_message::{UNAUTHORIZED, create_error_message};
+
 
 #[derive(Deserialize, Serialize)]
 pub struct LoginReq {
@@ -37,11 +39,7 @@ pub async fn login_post(
         }
         None => {
             app_data.service_container.session.remove_session_by_username(&login.username).await;
-            return HttpResponse::Ok().json(LoginRes {
-                username: login.username.clone(),
-                success: false,
-                session: String::from("n.a."),
-            })
+            return HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED))
         }
     };
 }

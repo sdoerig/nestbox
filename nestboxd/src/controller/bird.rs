@@ -1,6 +1,6 @@
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 
-use super::utilities::{PagingQuery, Sanatiz};
+use super::{error_message::{UNAUTHORIZED, create_error_message}, utilities::{PagingQuery, Sanatiz}};
 
 #[get("/birds")]
 pub async fn birds_get(
@@ -15,6 +15,9 @@ pub async fn birds_get(
         .session
         .validate_session(&req)
         .await;
+    if !session_obj.is_valid_session() {
+        return HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED))
+    }
     let birds = app_data
         .service_container
         .bird

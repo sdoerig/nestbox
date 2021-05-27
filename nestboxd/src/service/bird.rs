@@ -50,4 +50,8 @@ impl BirdService {
             .count_documents(doc! {"mandant_uuid": session_obj.get_mandant_uuid()}, None)
             .await
     }
+
+    pub async fn get_by_uuid_and_mandant_uuid() {
+        
+    }
 }

@@ -1,4 +1,6 @@
 use bson::doc;
+use chrono::Utc;
+use uuid::Uuid;
 
 use super::service_helper as sa;
 use crate::controller::{
@@ -78,5 +80,18 @@ impl BreedService {
             .await
     }
 
-    pub async fn post_breed(&self, session_obj: &SessionObject, bird: &BirdReq) {}
+    pub async fn post_breed(
+        &self,
+        session_obj: &SessionObject,
+        nestbox_req: &NestboxReq,
+        bird: &BirdReq,
+    ) {
+        let breed = doc! {
+          "uuid": Uuid::new_v4().to_string(),
+          "nestbox_uuid": &nestbox_req.uuid,
+          "user_uuid": session_obj.get_user_uuid(),
+          "discovery_date": Utc::now(),
+          "bird_uuid": &bird.uuid};
+        let res = self.collection.insert_one(breed, None).await;
+    }
 }

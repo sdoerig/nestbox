@@ -30,6 +30,7 @@ impl Sanatiz for PagingQuery {
 
 pub struct SessionObject {
     valid_session: bool,
+    user_uuid: String,
     session_key: String,
     mandant_uuid: String,
 }
@@ -46,6 +47,7 @@ impl SessionObject {
         if session_document.is_empty() {
             // invalid session - so return - does not make sense to go any further...
             return SessionObject {
+                user_uuid: String::from("n.a."),
                 valid_session: false,
                 session_key: String::from("n.a."),
                 mandant_uuid: String::from("n.a."),
@@ -60,9 +62,14 @@ impl SessionObject {
             Some(b) => (true, b.to_string().replace('"', &"")),
             None => (false, String::from("n.a.")),
         };
+        let (valid_user_uuid, user_uuid) = match session_document.get("uuid") {
+            Some(b) => (true, b.to_string().replace('"', &"")),
+            None => (false, String::from("n.a.")),
+        };
 
         SessionObject {
-            valid_session: (valid_mandant && valid_session_key),
+            user_uuid,
+            valid_session: (valid_mandant && valid_session_key && valid_user_uuid),
             session_key,
             mandant_uuid,
         }
@@ -70,6 +77,10 @@ impl SessionObject {
 
     pub fn get_mandant_uuid(&self) -> &str {
         self.mandant_uuid.as_str()
+    }
+    
+    pub fn get_user_uuid(&self) -> &str {
+        self.user_uuid.as_str()
     }
 
     pub fn get_session_key(&self) -> &str {
