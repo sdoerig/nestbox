@@ -1,8 +1,11 @@
 use bson::doc;
 
 use super::service_helper as sa;
-use crate::controller::utilities::{DocumentResponse, PagingQuery};
-use crate::controller::{breed::BreedReq, utilities::SessionObject};
+use crate::controller::{
+    req_structs::BirdReq,
+    utilities::{DocumentResponse, PagingQuery},
+};
+use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use futures::executor::block_on;
 use mongodb::{error::Error, Collection};
 
@@ -19,10 +22,11 @@ impl BreedService {
     pub async fn get_by_nestbox_uuid(
         &self,
         session_obj: &SessionObject,
-        req: &BreedReq,
+        req: &NestboxReq,
         paging: &PagingQuery,
     ) -> DocumentResponse {
-        let mut projection = doc! {"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0, "bird_uuid": 0}};
+        let mut projection =
+            doc! {"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0, "bird_uuid": 0}};
         if session_obj.is_valid_session() {
             projection = doc! {"$project": {"_id": 0, "mandant_uuid": 0, "bird_uuid": 0}};
         }
@@ -73,4 +77,6 @@ impl BreedService {
             .count_documents(doc! {"nestbox_uuid": nestbox_uuid}, None)
             .await
     }
+
+    pub async fn post_breed(&self, session_obj: &SessionObject, bird: &BirdReq) {}
 }

@@ -1,17 +1,16 @@
 pub use crate::controller::utilities::{PagingQuery, Sanatiz};
 use actix_web::{HttpRequest, HttpResponse, Responder, get, post, web};
-use serde::Deserialize;
+use bson::doc;
 
-#[derive(Deserialize)]
-pub struct BreedReq {
-    pub uuid: String,
-}
+use super::{error_message::{NESTBOX_OF_OTHER_MANDANT, create_error_message}, req_structs::{BirdReq, NestboxReq}};
+
+
 
 #[get("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_get(
     app_data: web::Data<crate::AppState>,
     req: HttpRequest,
-    breed_req: web::Path<BreedReq>,
+    breed_req: web::Path<NestboxReq>,
     mut paging: web::Query<PagingQuery>,
 ) -> impl Responder {
     paging.sanatizing();
@@ -29,28 +28,36 @@ pub async fn breeds_get(
     HttpResponse::Ok().json(breeds)
 }
 
-#[derive(Deserialize)]
-pub struct BirdReq {
-    pub uuid: String,
-    pub bird: String
-}
 
 #[post("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_post(
     app_data: web::Data<crate::AppState>,
     req: HttpRequest,
-    breed_req: web::Json<BirdReq>,
+    nestbox_req: web::Path<NestboxReq>,
+    bird_req: web::Json<BirdReq>,
 ) -> impl Responder {
-    let session_obj = app_data
+    // To post a new breed which means the user has discovered a nest
+    // in a birdhouse the user must be
+    // - authenticated
+    // - nestbox and transmitted bird must belong to the same mandant as the user does
+    // - if the bird does not have a uuid it is considered to create a new bird for 
+    //   the users mandant.
+    let session = app_data
         .service_container
         .session
         .validate_session(&req)
         .await;
-    if !session_obj.is_valid_session() {
+    if !session.is_valid_session() {
         //User must have a valid session here, if not it does not make sense
         //to proceed.
         return HttpResponse::Unauthorized().json(())
     } 
+    // check if user is allowed to post a breed on this specific nestbox...
+    if app_data.service_container.nestbox.get_by_mandant_uuid(&session, &nestbox_req).await.is_err() {
+        // ... seems to be a nestbox of another mandant
+        return HttpResponse::Forbidden().json(create_error_message(NESTBOX_OF_OTHER_MANDANT))
+    }
+    app_data.service_container.breed.post_breed(&session, &bird_req).await;
     HttpResponse::Ok().json(())
 
 
