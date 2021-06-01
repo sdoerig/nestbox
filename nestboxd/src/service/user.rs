@@ -58,3 +58,22 @@ fn is_password_correct(password: &str, password_hash: &str, salt: &str) -> bool 
     }
     false
 }
+#[cfg(test)]
+mod tests {
+    use futures::executor::block_on;
+    use mongodb::{Client, options::ClientOptions};
+
+    use super::*;
+
+    #[test]
+    fn test_login() {
+        let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
+        let client_options = block_on(client_options_future).unwrap();
+        let client = Client::with_options(client_options).unwrap();
+        let db = client.database("nestbox");
+        let users_col = db.collection("users");
+        let user_service = UserService::new(users_col);
+        let login_positive_future = user_service.login("fg_10", "secretbird");
+        let login_positive = block_on(login_positive_future);
+    }
+}

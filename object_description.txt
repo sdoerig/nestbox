@@ -69,9 +69,9 @@ PUT  /mandants/birds/
 
 MongoDB
 - Indexes
-  db.mandants.createIndex({"uuid": 1}, {"unique": true}
+  db.mandants.createIndex({"uuid": 1}, {"unique": true})
   db.nestboxes.createIndex({"uuid": 1}, {"unique": true})
-  db.breeds.createIndex({"uuid": 1}, {"unique": true}
+  db.breeds.createIndex({"uuid": 1}, {"unique": true})
   db.breeds.createIndex({"nestbox_uuid": 1})
   db.users.createIndex({"uuid": 1}, {"unique": true})
   db.users.createIndex({"username": 1}, {"unique": true})

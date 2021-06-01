@@ -126,8 +126,8 @@ fn generate_nestboxes_additionals(
             let latitude = random_latitude(-90.0, 90.0);
             geolocations_collector.append_doc(doc! { "uuid": Uuid::new_v4().to_string(),
             "nestbox_uuid": &nestbox_uuid,
-            "from_date": 0,
-            "until_date": 0,
+            "from_date": Utc::now(),
+            "until_date": Utc::now(),
             "position": {"type": "point", "coordinates": [ longitude, latitude ]}});
             breeds_collector.append_doc(doc! {
             "uuid": Uuid::new_v4().to_string(),
