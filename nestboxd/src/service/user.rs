@@ -65,15 +65,14 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn test_login() {
+    #[actix_rt::test]
+    async fn test_login() {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = block_on(client_options_future).unwrap();
         let client = Client::with_options(client_options).unwrap();
         let db = client.database("nestbox");
         let users_col = db.collection("users");
         let user_service = UserService::new(users_col);
-        let login_positive_future = user_service.login("fg_10", "secretbird");
-        let login_positive = block_on(login_positive_future);
-    }
+        let login_positive_future = user_service.login("fg_10", "secretbird").await;
+            }
 }

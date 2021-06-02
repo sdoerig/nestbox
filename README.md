@@ -1,5 +1,16 @@
 # nestbox
 
+## Note
+
+I'm still developing. My aim is to create a minimum viable product. This means
+
+- Having a web based GUI (missing)
+- Having a backend, which is able to
+  - show data according to the scanned QR code.
+  - authenticate a user
+  - accept modifications of nestboxes by an authenticated and authorized user
+
+
 ## Idea
 
 Some birdwatcher are also taking care of nestboxes. So these nestboxes are regularly checked during wintertime. To give you an idea, we're taking care of nearly 400 boxes. 
@@ -95,6 +106,14 @@ A user belongs to a mandant and can mutate any birdbox belonging tho this mandan
 - password_hash: Salted SHA3 hash of the password
 - salt: Type 4 uuid
 
+### sessions
+
+If a user successfully logged in a copy of the user record with the attribute session_key is stored in the sessions collections.
+
+- session_key: uuid type 4
+
+The session key must be uniqe. A user can only have one session at the same time. The session object will be deleted after 86400 seconds.
+
 ### nestboxes
 
 A nestbox represents by concept a QR code referencable item. In our case it would be a wooden nestbox e.g. hanging in a tree.
@@ -143,7 +162,150 @@ The attributes are
 - bird: Name of the bird
 - mandant_uuid: Mandant by which the bird was created
 
+## Indices
 
+The database needs to perform the indices below.
+
+```
+db.mandants.createIndex({"uuid": 1}, {"unique": true})
+db.nestboxes.createIndex({"uuid": 1}, {"unique": true})
+db.breeds.createIndex({"uuid": 1}, {"unique": true})
+db.breeds.createIndex({"nestbox_uuid": 1})
+db.users.createIndex({"uuid": 1}, {"unique": true})
+db.users.createIndex({"username": 1}, {"unique": true})
+db.geolocations.createIndex({"uuid": 1}, {"unique": true})
+db.birds.createIndex({"uuid": 1}, {"unique": true})
+db.birds.createIndex({"mandant_uuid": 1})
+db.sessions.createIndex({"session_key": 2}, {"unique": true})
+db.sessions.createIndex({"session_key": 1},  { expireAfterSeconds: 86400 })
+db.geolocations.createIndex({"nestbox_uuid": 1})
+db.nestboxes.createIndex({"mandant_uuid":1})
+```
+
+## Backend
+
+### Framework
+The backend is a restful server written based on [actix-web](https://actix.rs/).
+
+
+### post /login
+
+Allows login. At the moment, database_bouncycastle hashes clear text passwords. This will be turned into hashes, which means then the client transmits only the hash.
+If a user loges in twice, the old session is destroyed. If an authenticated user fails to login the current session is deleted too - which actually means the user has been logged out.
+
+#### Request
+
+```
+curl \
+  --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"username":"fg_199","password":"secretbird"}' \
+  http://127.0.0.1:8080/login
+```
+#### Response
+
+```
+{"username":"fg_199","success":true,"session":"28704470-0908-408e-938f-64dd2b7578b9"}
+```
+
+
+### get /birds
+
+
+### get /nestboxes/{uuid}/breeds
+
+#### Request
+
+```
+curl \
+  -H "Authorization: Basic 28704470-0908-408e-938f-64dd2b7578b9" \
+  -H "Content-Type: application/json" \
+  http://127.0.0.1:8080/nestboxes/9915a1ef-edaa-4268-b86c-7e43fe0bbd6b/breeds?page_limit=2\&page_number=1
+
+```
+
+#### Response
+
+```
+{
+   "documents":[
+      {
+         "uuid":"7ff60c06-c993-4755-8a37-65cabfae9f2a",
+         "nestbox_uuid":"9915a1ef-edaa-4268-b86c-7e43fe0bbd6b",
+         "user_uuid":"7a568103-d31c-4615-8e5c-ed81771c5956",
+         "discovery_date":{
+            "$date":"2021-06-01T18:36:38.988Z"
+         },
+         "bird":[
+            {
+               "uuid":"c94d90a0-42d5-4473-a0c6-aea758ba3356",
+               "bird":"bird_134"
+            }
+         ]
+      },
+      {
+         "uuid":"3e339888-07e3-413c-a13f-3319454b07d6",
+         "nestbox_uuid":"9915a1ef-edaa-4268-b86c-7e43fe0bbd6b",
+         "user_uuid":"7a568103-d31c-4615-8e5c-ed81771c5956",
+         "discovery_date":{
+            "$date":"2021-06-01T18:36:38.988Z"
+         },
+         "bird":[
+            {
+               "uuid":"9a163a38-225c-4ee1-9a2a-72e1d49fec94",
+               "bird":"bird_82"
+            }
+         ]
+      }
+   ],
+   "counted_documents":6,
+   "pages":3,
+   "page_number":1,
+   "page_limit":2
+}
+```
+If the user is not authenticated the response is without user_uuid.
+
+```
+{
+   "documents":[
+      {
+         "uuid":"7ff60c06-c993-4755-8a37-65cabfae9f2a",
+         "nestbox_uuid":"9915a1ef-edaa-4268-b86c-7e43fe0bbd6b",
+         "discovery_date":{
+            "$date":"2021-06-01T18:36:38.988Z"
+         },
+         "bird":[
+            {
+               "uuid":"c94d90a0-42d5-4473-a0c6-aea758ba3356",
+               "bird":"bird_134"
+            }
+         ]
+      },
+      {
+         "uuid":"3e339888-07e3-413c-a13f-3319454b07d6",
+         "nestbox_uuid":"9915a1ef-edaa-4268-b86c-7e43fe0bbd6b",
+         "discovery_date":{
+            "$date":"2021-06-01T18:36:38.988Z"
+         },
+         "bird":[
+            {
+               "uuid":"9a163a38-225c-4ee1-9a2a-72e1d49fec94",
+               "bird":"bird_82"
+            }
+         ]
+      }
+   ],
+   "counted_documents":6,
+   "pages":3,
+   "page_number":1,
+   "page_limit":2
+}
+```
+
+
+### post /nestboxes/{uuid}/breeds
+### get /nestboxes/{uuid}
 
 
 
