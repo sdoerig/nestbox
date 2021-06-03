@@ -78,8 +78,8 @@ MongoDB
   db.geolocations.createIndex({"uuid": 1}, {"unique": true})
   db.birds.createIndex({"uuid": 1}, {"unique": true})
   db.birds.createIndex({"mandant_uuid": 1})
-  
-
+  db.sessions.createIndex({"session_key": 2}, {"unique": true})
+  db.sessions.createIndex({"session_key": 1},  { expireAfterSeconds: 86400 })
   db.geolocations.createIndex({"nestbox_uuid": 1})
   db.nestboxes.createIndex({"mandant_uuid":1})
 

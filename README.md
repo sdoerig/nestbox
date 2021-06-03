@@ -77,7 +77,7 @@ mandant 1 ----- n users
 |
 +----- 1 ------ n nestboxes 1 ----- n breeds
                   |
-                  + n ------------- n geolocation
+                  \ 1 ------------- n geolocation
 
 ```
 
@@ -111,6 +111,7 @@ A user belongs to a mandant and can mutate any birdbox belonging tho this mandan
 If a user successfully logged in a copy of the user record with the attribute session_key is stored in the sessions collections.
 
 - session_key: uuid type 4
+- session_created_at: timestamp used for a TTL within mongodb, set to 86400 seconds. Means the database removes the session form the collection after one day.
 
 The session key must be uniqe. A user can only have one session at the same time. The session object will be deleted after 86400 seconds.
 
@@ -177,7 +178,7 @@ db.geolocations.createIndex({"uuid": 1}, {"unique": true})
 db.birds.createIndex({"uuid": 1}, {"unique": true})
 db.birds.createIndex({"mandant_uuid": 1})
 db.sessions.createIndex({"session_key": 2}, {"unique": true})
-db.sessions.createIndex({"session_key": 1},  { expireAfterSeconds: 86400 })
+db.sessions.createIndex({"session_created_at": 1}, { expireAfterSeconds: 86400 })
 db.geolocations.createIndex({"nestbox_uuid": 1})
 db.nestboxes.createIndex({"mandant_uuid":1})
 ```
@@ -186,6 +187,41 @@ db.nestboxes.createIndex({"mandant_uuid":1})
 
 ### Framework
 The backend is a restful server written based on [actix-web](https://actix.rs/).
+
+### Start 
+
+The daeamon needs a config file, if started without one gets the message below.
+
+```
+Usage: target/debug/nestboxd -c CONFIG_FILE
+
+Options:
+    -c, --config CONFIG_FILE
+                        Path to configuration file
+
+```
+
+The config file is a YAML file with the content
+
+```
+mongodb:
+  uri: mongodb://localhost:27017
+  database: nestbox
+httpserver:
+  ip: 127.0.0.1
+  port: "8080"
+```
+
+### Logging
+
+There is at the moment a standard logging to STDOUT.
+
+```
+[2021-06-03T19:25:32Z INFO  actix_server::builder] Starting 4 workers
+[2021-06-03T19:25:32Z INFO  actix_server::builder] Starting "actix-web-service-127.0.0.1:8080" service on 127.0.0.1:8080
+[2021-06-03T19:29:25Z INFO  actix_web::middleware::logger] 127.0.0.1:47618 "GET /nestboxes/9915a1ef-edaa-4268-b86c-7e43fe0bbd6b/breeds?page_limit=2&page_number=1 HTTP/1.1" 200 539 "-" "curl/7.68.0" 0.024426
+[2021-06-03T19:29:39Z INFO  actix_web::middleware::logger] 127.0.0.1:47624 "GET /nestboxes/9915a1ef-edaa-4268-b86c-7e43fe0bbd6b/breeds?page_limit=2&page_number=1 HTTP/1.1" 200 641 "-" "curl/7.68.0" 0.021756
+```
 
 
 ### post /login
@@ -210,6 +246,44 @@ curl \
 
 
 ### get /birds
+
+#### Request
+
+A valid session must be provided. If so the users gets a pageable view of the birds beloging to the mandant the user session belongs to.
+
+Note also the birds provided are the ones selectable when reporting a breed.
+
+```
+curl -H "Authorization: Basic 2c91ebd1-800e-4573-8f2b-6ac91c2a407a" http://127.0.0.1:8080/birds?page_limit=2\&page_number=1
+```
+
+#### Response
+
+```
+{
+   "documents": [
+      {
+         "uuid": "aee03da8-e297-46da-aac2-51f6604558dc",
+         "bird": "bird_0"
+      },
+      {
+         "uuid":"31a1e34e-7ae3-4b59-9197-c0ad9468fa20",
+         "bird":"bird_1"
+      }
+   ],
+   "counted_documents":150,
+   "pages":75,
+   "page_number":1,
+   "page_limit":2
+}
+```
+
+If no or an invalid session is provided the response will be 
+
+```
+{"error":2,"error_message":"UNAUTHORIZED"}
+```
+
 
 
 ### get /nestboxes/{uuid}/breeds

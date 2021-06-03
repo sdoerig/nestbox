@@ -1,6 +1,7 @@
 use crate::controller::utilities::SessionObject;
 use actix_web::HttpRequest;
 use bson::{doc, Document};
+use chrono::Utc;
 use mongodb::{Collection};
 use uuid::Uuid;
 
@@ -23,6 +24,7 @@ impl SessionService {
         let mut session_obj = user_obj;
         session_obj.remove("_id");
         session_obj.insert("session_key", &session_id);
+        session_obj.insert("session_created_at", Utc::now());
         self.remove_session(&session_obj).await;
         let _session = self.collection.insert_one(session_obj, None).await;
         session_id
