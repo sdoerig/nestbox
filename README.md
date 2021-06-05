@@ -48,7 +48,7 @@ Options:
     -n, --number of records to insert NUMBER
                         The number of records to insert
 ```
-E.g. if executed with -5 12 the follwing number of records are inserted:
+E.g. if executed with -n 12 the follwing number of records are inserted:
 
 - 2 records in the collestion mandants
 - 12 records in the collection nestboxes
