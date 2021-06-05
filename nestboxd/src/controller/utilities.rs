@@ -1,3 +1,4 @@
+use actix_web::HttpRequest;
 use bson::Document;
 use mongodb::{error::Error, Collection};
 use serde::Deserialize;
@@ -5,6 +6,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 const MAX_PAGE_LIMIT: i64 = 100;
+const HTTP_AUTHORIZATION: &str = "Authorization";
 
 #[derive(Deserialize)]
 pub struct PagingQuery {
@@ -78,7 +80,7 @@ impl SessionObject {
     pub fn get_mandant_uuid(&self) -> &str {
         self.mandant_uuid.as_str()
     }
-    
+
     pub fn get_user_uuid(&self) -> &str {
         self.user_uuid.as_str()
     }
@@ -90,7 +92,6 @@ impl SessionObject {
     pub fn is_valid_session(&self) -> bool {
         self.valid_session
     }
-
 }
 
 #[derive(Serialize)]
@@ -117,4 +118,12 @@ impl DocumentResponse {
             page_limit: paging.page_limit,
         }
     }
+}
+
+pub fn parse_auth_header(http_req: &HttpRequest) -> String {
+    let session_token = match http_req.headers().get(HTTP_AUTHORIZATION) {
+        Some(t) => t.to_str(),
+        None => Ok("n.a."),
+    };
+    session_token.unwrap().replace("Basic ", "")
 }

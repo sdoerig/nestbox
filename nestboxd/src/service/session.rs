@@ -5,7 +5,7 @@ use chrono::Utc;
 use mongodb::{Collection};
 use uuid::Uuid;
 
-const HTTP_AUTHORIZATION: &str = "Authorization";
+
 
 #[derive(Clone)]
 pub struct SessionService {
@@ -49,15 +49,12 @@ impl SessionService {
             .await;
     }
 
-    pub async fn validate_session(&self, http_req: &HttpRequest) -> SessionObject {
-        let session_token = match http_req.headers().get(HTTP_AUTHORIZATION) {
-            Some(t) => t.to_str(),
-            None => Ok("n.a."),
-        };
+    pub async fn validate_session(&self, session_token: &str) -> SessionObject {
+        
         let session_obj = self
             .collection
             .find_one(
-                doc! {"session_key": session_token.unwrap().replace("Basic ", "")},
+                doc! {"session_key": session_token},
                 None,
             )
             .await;

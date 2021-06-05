@@ -16,3 +16,4 @@ pub(crate) async fn read_mongodb_cursor(blocked_res: Result<mongodb::Cursor, Err
     }
     documents
 }
+

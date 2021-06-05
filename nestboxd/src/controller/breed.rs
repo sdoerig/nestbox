@@ -2,10 +2,7 @@ pub use crate::controller::utilities::{PagingQuery, Sanatiz};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 
-use super::{
-    error_message::{create_error_message, NESTBOX_OF_OTHER_MANDANT},
-    req_structs::{BirdReq, NestboxReq},
-};
+use super::{error_message::{create_error_message, NESTBOX_OF_OTHER_MANDANT}, req_structs::{BirdReq, NestboxReq}, utilities::parse_auth_header};
 
 #[get("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_get(
@@ -18,7 +15,7 @@ pub async fn breeds_get(
     let session_obj = app_data
         .service_container
         .session
-        .validate_session(&req)
+        .validate_session(&parse_auth_header(&req))
         .await;
     let breeds = app_data
         .service_container
@@ -45,7 +42,7 @@ pub async fn breeds_post(
     let session = app_data
         .service_container
         .session
-        .validate_session(&req)
+        .validate_session(&parse_auth_header(&req))
         .await;
     if !session.is_valid_session() {
         //User must have a valid session here, if not it does not make sense
