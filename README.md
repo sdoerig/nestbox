@@ -38,11 +38,13 @@ Currently it is a multipart repo containing the parts
 ## database_bouncycastle
 As written above, this is only to fill up the database with some example data, 
 ```
-Usage: target/release/database_bouncycastle -d mongodb://127.0.2.15:27017/?w=majority -n 123
+Usage: target/release/database_bouncycastle -m mongodb://127.0.0.1:27017/?w=majority -d nestbox_bouncycastle -n 123
 
 Options:
-    -d, --database_uri MONGO_DB_URI
+    -m, --mongodb_host MONGO_DB_HOST
                         URI to mongodb e.g mongodb://<db_host>:<db_port>/
+    -d, --database_name MONGO_DB_HOST
+                        dateabase name e.g. nestbox_bouncycastle
     -n, --number of records to insert NUMBER
                         The number of records to insert
 ```

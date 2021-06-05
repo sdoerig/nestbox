@@ -4,21 +4,27 @@ use std::process;
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!(
-        "Usage: {} -d mongodb://127.0.2.15:27017/?w=majority -n 123",
+        "Usage: {} -m mongodb://127.0.0.1:27017/?w=majority -d nestbox_bouncycastle -n 123",
         program
     );
     print!("{}", opts.usage(&brief));
 }
 
-pub fn extract_argv() -> (String, i32) {
+pub fn extract_argv() -> (String, String, i32) {
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
     let mut opts = Options::new();
     opts.optopt(
-        "d",
-        "database_uri",
+        "m",
+        "mongodb_host",
         "URI to mongodb e.g mongodb://<db_host>:<db_port>/",
-        "MONGO_DB_URI",
+        "MONGO_DB_HOST",
+    );
+    opts.optopt(
+        "d",
+        "database_name",
+        "dateabase name e.g. nestbox_bouncycastle",
+        "MONGO_DB_HOST",
     );
     opts.optopt(
         "n",
@@ -33,7 +39,14 @@ pub fn extract_argv() -> (String, i32) {
             process::exit(2)
         }
     };
-    let db_uri = match matches.opt_str("d") {
+    let db_host = match matches.opt_str("m") {
+        Some(m) => m,
+        None => {
+            print_usage(&program, &opts);
+            process::exit(3)
+        }
+    };
+    let db_name = match matches.opt_str("d") {
         Some(m) => m,
         None => {
             print_usage(&program, &opts);
@@ -54,5 +67,5 @@ pub fn extract_argv() -> (String, i32) {
             process::exit(3)
         }
     };
-    (db_uri, record_int)
+    (db_host, db_name, record_int)
 }
