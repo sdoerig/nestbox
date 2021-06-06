@@ -18,8 +18,8 @@ jobs:
       # as it is set as an "override" for current directory
       - name: Start mongod
         run: sudo systemctl start mongod
-      - name: Run database_bouncycastle test
-        run: cd database_bouncycastle && cargo test
+        #- name: Run database_bouncycastle test
+        #run: cd database_bouncycastle && cargo test
       - name: Restore mongo test db
         run: mongorestore nestboxd/test_db_dump
       - name: Run nestboxd test
