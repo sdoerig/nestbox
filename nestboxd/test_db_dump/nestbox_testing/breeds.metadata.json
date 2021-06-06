@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"uuid":{"$numberDouble":"1.0"}},"name":"uuid_1"},{"v":{"$numberInt":"2"},"key":{"nestbox_uuid":{"$numberDouble":"1.0"}},"name":"nestbox_uuid_1"}],"uuid":"f037a2bd3391455a97141212ffbaca99","collectionName":"breeds"}

@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"unique":true,"key":{"uuid":{"$numberDouble":"1.0"}},"name":"uuid_1"},{"v":{"$numberInt":"2"},"key":{"mandant_uuid":{"$numberDouble":"1.0"}},"name":"mandant_uuid_1"}],"uuid":"66df0e7abdda46c5a3832a7312239e94","collectionName":"nestboxes"}

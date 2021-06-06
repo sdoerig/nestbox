@@ -1,6 +1,6 @@
 use actix_web::HttpRequest;
 use bson::Document;
-use mongodb::{error::Error, Collection};
+use mongodb::{error::Error};
 use serde::Deserialize;
 
 use serde::Serialize;
