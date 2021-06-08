@@ -2,7 +2,11 @@ pub use crate::controller::utilities::{PagingQuery, Sanatiz};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 
-use super::{error_message::{create_error_message, NESTBOX_OF_OTHER_MANDANT}, req_structs::{BirdReq, NestboxReq}, utilities::parse_auth_header};
+use super::{
+    error_message::{create_error_message, INTERNAL_SERVER_ERROR, NESTBOX_OF_OTHER_MANDANT},
+    req_structs::{BirdReq, NestboxReq},
+    utilities::parse_auth_header,
+};
 
 #[get("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_get(
@@ -49,6 +53,7 @@ pub async fn breeds_post(
         //to proceed.
         return HttpResponse::Unauthorized().json(());
     }
+    
     // check if user is allowed to post a breed on this specific nestbox...
     match app_data
         .service_container
@@ -57,20 +62,27 @@ pub async fn breeds_post(
         .await
     {
         Ok(o) => match o {
-            Some(_) => {}
+            Some(_d) => {},
             None => {
                 // ... seems to be a nestbox of another mandant
                 return HttpResponse::Unauthorized()
-                    .json(create_error_message(NESTBOX_OF_OTHER_MANDANT))
+                    .json(create_error_message(NESTBOX_OF_OTHER_MANDANT));
             }
         },
-        Err(_) => return HttpResponse::InternalServerError().json(()), 
+        Err(_) => return HttpResponse::InternalServerError().json(()),
     }
-
-    app_data
+    
+    match app_data
         .service_container
         .breed
         .post_breed(&session, &nestbox_req, &bird_req)
-        .await;
-    HttpResponse::Ok().json(())
+        .await
+    {
+        Ok(d) => 
+            return HttpResponse::Created().json(doc! {"inserted_id": d.inserted_id }),
+        Err(_e) => {
+            return HttpResponse::InternalServerError()
+                .json(create_error_message(INTERNAL_SERVER_ERROR))
+        }
+    }
 }

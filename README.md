@@ -381,6 +381,28 @@ If the user is not authenticated the response is without user_uuid.
 
 
 ### post /nestboxes/{uuid}/breeds
+
+#### Request
+
+```
+curl \
+  -H "Authorization: Basic b955d5ab-531d-45a5-b610-5b456fa509d9" \
+  --H "Content-Type: application/json" \
+  --request POST \
+  --data '{"bird_uuid": "a4152a25-b734-4748-8a43-2401ed387c65", "bird":"a"}' \
+  http://127.0.0.1:8080/nestboxes/9973e59f-771d-452f-9a1b-8b4a6d5c4f95/breeds
+
+```
+
+
+#### Response
+
+```
+{"inserted_id":{"$oid":"60bfcc160014769d00e0b88a"}}
+```
+
+
+
 ### get /nestboxes/{uuid}
 
 

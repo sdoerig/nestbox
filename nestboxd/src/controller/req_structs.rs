@@ -7,6 +7,6 @@ pub struct NestboxReq {
 
 #[derive(Deserialize)]
 pub struct BirdReq {
-    pub uuid: String,
+    pub bird_uuid: String,
     pub bird: String
 }
