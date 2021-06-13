@@ -1,3 +1,4 @@
+use crate::controller::utilities::nestbox_req_is_authorized;
 pub use crate::controller::utilities::{PagingQuery, Sanatiz};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
@@ -48,38 +49,16 @@ pub async fn breeds_post(
         .session
         .validate_session(&parse_auth_header(&req))
         .await;
-    if !session.is_valid_session() {
-        //User must have a valid session here, if not it does not make sense
-        //to proceed.
-        return HttpResponse::Unauthorized().json(());
+    if let Some(value) = nestbox_req_is_authorized(&session, &app_data, &nestbox_req).await {
+        return value;
     }
-    
-    // check if user is allowed to post a breed on this specific nestbox...
-    match app_data
-        .service_container
-        .nestbox
-        .get_by_mandant_uuid(&session, &nestbox_req)
-        .await
-    {
-        Ok(o) => match o {
-            Some(_d) => {},
-            None => {
-                // ... seems to be a nestbox of another mandant
-                return HttpResponse::Unauthorized()
-                    .json(create_error_message(NESTBOX_OF_OTHER_MANDANT));
-            }
-        },
-        Err(_) => return HttpResponse::InternalServerError().json(()),
-    }
-    
     match app_data
         .service_container
         .breed
         .post_breed(&session, &nestbox_req, &bird_req)
         .await
     {
-        Ok(d) => 
-            return HttpResponse::Created().json(doc! {"inserted_id": d.inserted_id }),
+        Ok(d) => return HttpResponse::Created().json(doc! {"inserted_id": d.inserted_id }),
         Err(_e) => {
             return HttpResponse::InternalServerError()
                 .json(create_error_message(INTERNAL_SERVER_ERROR))

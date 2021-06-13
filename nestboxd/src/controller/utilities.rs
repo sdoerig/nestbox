@@ -1,9 +1,13 @@
-use actix_web::HttpRequest;
+use actix_web::{web, HttpRequest, HttpResponse};
 use bson::Document;
 use mongodb::{error::Error};
 use serde::Deserialize;
 
 use serde::Serialize;
+
+use super::error_message::UNAUTHORIZED;
+use super::error_message::{NESTBOX_OF_OTHER_MANDANT, create_error_message};
+use super::req_structs::NestboxReq;
 
 const MAX_PAGE_LIMIT: i64 = 100;
 const HTTP_AUTHORIZATION: &str = "Authorization";
@@ -127,3 +131,34 @@ pub fn parse_auth_header(http_req: &HttpRequest) -> String {
     };
     session_token.unwrap().replace("Basic ", "")
 }
+
+pub async fn nestbox_req_is_authorized(
+    session: &super::utilities::SessionObject,
+    app_data: &web::Data<crate::AppState>,
+    nestbox_req: &web::Path<NestboxReq>,
+) -> Option<HttpResponse> {
+    if !session.is_valid_session() {
+        //User must have a valid session here, if not it does not make sense
+        //to proceed.
+        return Some(HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED)));
+    }
+    match app_data
+        .service_container
+        .nestbox
+        .get_by_mandant_uuid(session, nestbox_req)
+        .await
+    {
+        Ok(o) => match o {
+            Some(_d) => return None,
+            None => {
+                // ... seems to be a nestbox of another mandant
+                return Some(
+                    HttpResponse::Unauthorized()
+                        .json(create_error_message(NESTBOX_OF_OTHER_MANDANT)),
+                );
+            }
+        },
+        Err(_) => return Some(HttpResponse::InternalServerError().json(())),
+    }
+}
+
