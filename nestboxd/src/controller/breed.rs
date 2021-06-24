@@ -58,9 +58,9 @@ pub async fn breeds_post(
         .post_breed(&session, &nestbox_req, &bird_req)
         .await
     {
-        Ok(d) => return HttpResponse::Created().json(doc! {"inserted_id": d.inserted_id }),
+        Ok(d) => HttpResponse::Created().json(doc! {"inserted_id": d.inserted_id }),
         Err(_e) => {
-            return HttpResponse::InternalServerError()
+            HttpResponse::InternalServerError()
                 .json(create_error_message(INTERNAL_SERVER_ERROR))
         }
     }

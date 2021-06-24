@@ -149,16 +149,16 @@ pub async fn nestbox_req_is_authorized(
         .await
     {
         Ok(o) => match o {
-            Some(_d) => return None,
+            Some(_d) => None,
             None => {
                 // ... seems to be a nestbox of another mandant
-                return Some(
+                Some(
                     HttpResponse::Unauthorized()
                         .json(create_error_message(NESTBOX_OF_OTHER_MANDANT)),
-                );
+                )
             }
         },
-        Err(_) => return Some(HttpResponse::InternalServerError().json(())),
+        Err(_) => Some(HttpResponse::InternalServerError().json(())),
     }
 }
 

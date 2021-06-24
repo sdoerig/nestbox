@@ -1,8 +1,14 @@
-use actix_web::{HttpRequest, HttpResponse, Responder, get, post, web};
+use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 use serde::{Deserialize, Serialize};
 
-use super::{error_message::{NOT_FOUND, create_error_message}, req_structs::NestboxReq, utilities::{nestbox_req_is_authorized, parse_auth_header}};
+use crate::controller::error_message::INTERNAL_SERVER_ERROR;
+
+use super::{
+    error_message::{create_error_message, NOT_FOUND},
+    req_structs::{GeolocationReq, NestboxReq},
+    utilities::{nestbox_req_is_authorized, parse_auth_header},
+};
 
 #[derive(Serialize, Deserialize)]
 struct NestboxResponse {
@@ -32,7 +38,8 @@ pub async fn nestboxes_get(
 pub async fn nestboxes_locations_post(
     app_data: web::Data<crate::AppState>,
     req: HttpRequest,
-    nestbox_req: web::Path<NestboxReq>
+    nestbox_req: web::Path<NestboxReq>,
+    geoloc_req: web::Path<GeolocationReq>,
 ) -> impl Responder {
     let session = app_data
         .service_container
@@ -43,5 +50,20 @@ pub async fn nestboxes_locations_post(
         return value;
     }
 
-    HttpResponse::Ok().json(doc! {"hello": "world"})
+    match app_data
+        .service_container
+        .geolocation
+        .post_geolocation(&nestbox_req.uuid, geoloc_req.long, geoloc_req.lat)
+        .await
+    {
+        crate::service::service_helper::InsertResult::Ok(d) => {
+            HttpResponse::Created().json(doc! {"inserted_id": d })
+        }
+        crate::service::service_helper::InsertResult::TerminationError => {
+            HttpResponse::InternalServerError().json(create_error_message(INTERNAL_SERVER_ERROR))
+        }
+        crate::service::service_helper::InsertResult::InsertError => {
+            HttpResponse::InternalServerError().json(create_error_message(INTERNAL_SERVER_ERROR))
+        }
+    }
 }
