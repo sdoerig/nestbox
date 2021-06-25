@@ -39,7 +39,7 @@ pub async fn nestboxes_locations_post(
     app_data: web::Data<crate::AppState>,
     req: HttpRequest,
     nestbox_req: web::Path<NestboxReq>,
-    geoloc_req: web::Path<GeolocationReq>,
+    geoloc_req: web::Json<GeolocationReq>,
 ) -> impl Responder {
     let session = app_data
         .service_container

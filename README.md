@@ -401,7 +401,40 @@ curl \
 {"inserted_id":{"$oid":"60bfcc160014769d00e0b88a"}}
 ```
 
+### post /nestboxes/{uuid}/geolocations
 
+#### Request
+
+Adds a new geolocation to a nestbox. This is the case if it had been moved e.g. tree has been cut or broken down.
+
+```
+curl   \
+  -H "Authorization: Basic 8f42f009-dda8-4448-a2db-f9abb8326b06" \
+  -H "Content-Type: application/json"   \
+  --request POST   \
+  --data '{ "long":-11.6453, "lat": -47.2345}'   \
+  http://127.0.0.1:8080/nestboxes/787c9399-b10a-44f7-bcc5-251e4414cbb0/geolocations
+
+```
+
+#### Response
+
+In case everything went well
+
+```
+{"inserted_id":"ObjectId(\"60d5a4ed0062a0f1006a1967\")"}
+```
+
+If the user was not properly authenticated
+
+```
+{"error":2,"error_message":"UNAUTHORIZED"}
+```
+or if the nestbox belongs to another mandant then the user session
+
+```
+{"error":1,"error_message":"NESTBOX_OF_OTHER_MANDANT"}
+```
 
 ### get /nestboxes/{uuid}
 

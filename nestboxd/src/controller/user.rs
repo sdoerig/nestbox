@@ -28,15 +28,15 @@ pub async fn login_post(
         .await;
     
     match user_response {
-        Some(user_obj) => {
-            return HttpResponse::Ok().json(LoginRes {
+        Some(user_obj) => return
+            HttpResponse::Ok().json(LoginRes {
                 username: login.username.clone(),
                 success: true,
                 session: app_data.service_container
                 .session
                 .create_session(user_obj).await //String::from("n.a."),
-            })
-        }
+            }),
+        
         None => {
             app_data.service_container.session.remove_session_by_username(&login.username).await;
             return HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED))
