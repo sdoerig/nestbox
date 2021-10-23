@@ -2,13 +2,9 @@ use bson::doc;
 use chrono::{Duration, Utc};
 use uuid::Uuid;
 
-use super::service_helper::{self as sa, InsertResult};
-use crate::controller::{
-    req_structs::BirdReq,
-    utilities::{DocumentResponse, PagingQuery},
-};
-use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
-use mongodb::{error::Error, Collection};
+use super::service_helper::{InsertResult};
+
+use mongodb::{Collection};
 
 #[derive(Clone)]
 pub struct GeolocationService {

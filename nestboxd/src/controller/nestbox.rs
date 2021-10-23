@@ -6,7 +6,7 @@ use crate::controller::error_message::INTERNAL_SERVER_ERROR;
 
 use super::{
     error_message::{create_error_message, NOT_FOUND},
-    req_structs::{GeolocationReq, NestboxReq},
+    req_structs::{GeolocationReq, NestboxReq, Validator},
     utilities::{nestbox_req_is_authorized, parse_auth_header},
 };
 
@@ -46,6 +46,7 @@ pub async fn nestboxes_locations_post(
         .session
         .validate_session(&parse_auth_header(&req))
         .await;
+    nestbox_req.is_valid();
     if let Some(value) = nestbox_req_is_authorized(&session, &app_data, &nestbox_req).await {
         return value;
     }
