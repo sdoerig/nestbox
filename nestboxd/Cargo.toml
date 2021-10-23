@@ -2,7 +2,7 @@
 name = "nestboxd"
 version = "0.1.0"
 authors = ["Stefan Dörig <sdoerig@bluewin.ch>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 getopts = "0.2"
