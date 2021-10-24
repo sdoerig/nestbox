@@ -1,9 +1,7 @@
 use serde::Deserialize;
 
+use super::validator::{Validator, is_uuid};
 
-pub trait Validator {
-    fn is_valid(&self) -> bool;
-}
 #[derive(Deserialize)]
 pub struct NestboxReq {
     pub uuid: String,
@@ -12,7 +10,7 @@ pub struct NestboxReq {
 
 impl Validator for NestboxReq {
     fn is_valid(&self) -> bool {
-        true
+        is_uuid(&self.uuid)
     }
 }
 

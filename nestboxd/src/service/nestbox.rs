@@ -1,5 +1,5 @@
 use bson::{doc, Document};
-use futures::executor::block_on;
+
 use mongodb::{error::Error, Collection};
 
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};

@@ -1,4 +1,4 @@
-use crate::controller::utilities::nestbox_req_is_authorized;
+use crate::controller::{error_message::BAD_REQUEST, utilities::nestbox_req_is_authorized, validator::Validator};
 pub use crate::controller::utilities::{PagingQuery, Sanatiz};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
@@ -16,6 +16,10 @@ pub async fn breeds_get(
     breed_req: web::Path<NestboxReq>,
     mut paging: web::Query<PagingQuery>,
 ) -> impl Responder {
+    if !breed_req.is_valid() {
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+    }
+
     paging.sanatizing();
     let session_obj = app_data
         .service_container
@@ -38,6 +42,11 @@ pub async fn breeds_post(
     nestbox_req: web::Path<NestboxReq>,
     bird_req: web::Json<BirdReq>,
 ) -> impl Responder {
+
+    if !nestbox_req.is_valid() {
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+    }
+
     // To post a new breed which means the user has discovered a nest
     // in a birdhouse the user must be
     // - authenticated

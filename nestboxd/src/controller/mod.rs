@@ -5,4 +5,5 @@ pub mod utilities;
 pub mod bird;
 pub mod req_structs;
 pub mod res_structs;
+pub mod validator;
 pub mod error_message;

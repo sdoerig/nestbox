@@ -2,12 +2,13 @@ use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 use serde::{Deserialize, Serialize};
 
-use crate::controller::error_message::INTERNAL_SERVER_ERROR;
+use crate::controller::error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR};
 
 use super::{
     error_message::{create_error_message, NOT_FOUND},
-    req_structs::{GeolocationReq, NestboxReq, Validator},
+    req_structs::{GeolocationReq, NestboxReq},
     utilities::{nestbox_req_is_authorized, parse_auth_header},
+    validator::Validator
 };
 
 #[derive(Serialize, Deserialize)]
@@ -20,6 +21,10 @@ pub async fn nestboxes_get(
     app_data: web::Data<crate::AppState>,
     nestbox: web::Path<NestboxReq>,
 ) -> impl Responder {
+    if !nestbox.is_valid() {
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+    }
+
     let result = app_data
         .service_container
         .nestbox
@@ -46,7 +51,10 @@ pub async fn nestboxes_locations_post(
         .session
         .validate_session(&parse_auth_header(&req))
         .await;
-    nestbox_req.is_valid();
+    if !nestbox_req.is_valid() {
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+    }
+
     if let Some(value) = nestbox_req_is_authorized(&session, &app_data, &nestbox_req).await {
         return value;
     }

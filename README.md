@@ -438,6 +438,17 @@ or if the nestbox belongs to another mandant then the user session
 
 ### get /nestboxes/{uuid}
 
+#### Request
+Fetches a nestbox.
+```
+curl  http://127.0.0.1:8080/nestboxes/1bec20fc-5416-4941-b7e4-e15aa26a5c7a
+```
+
+#### Response
+
+```
+{"_id":{"$oid":"60b67e360047576800f56ba1"},"public":true,"uuid":"1bec20fc-5416-4941-b7e4-e15aa26a5c7a","mandant_uuid":"c7d880d5-c98d-40ee-bced-b5a0165420c0","created_at":{"$date":"2021-06-01T18:36:38.418Z"}}
+``` 
 
 
 
