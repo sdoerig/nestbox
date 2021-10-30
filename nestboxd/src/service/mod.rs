@@ -5,3 +5,4 @@ pub mod breed;
 pub mod bird;
 pub mod geolocation;
 pub mod service_helper;
+pub mod image;

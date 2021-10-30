@@ -7,14 +7,20 @@ use service::nestbox::NestboxService;
 use service::session::SessionService;
 use service::user::UserService;
 use service::bird::BirdService;
+use service::image::ImageService;
+
 
 mod controller;
 mod extract_argv;
 mod service;
 
+
+
+
 //
 pub struct ServiceContainer {
     db: Database,
+    image: ImageService,
     nestbox: NestboxService,
     user: UserService,
     session: SessionService,
@@ -24,7 +30,8 @@ pub struct ServiceContainer {
 }
 
 impl ServiceContainer {
-    pub fn new(db: Database) -> Self {
+    pub fn new(db: Database, image_directory: String) -> Self {
+        let image_service = ImageService::new(image_directory);
         let nestboxes_col = db.collection("nestboxes");
         let users_col = db.collection("users");
         let session_col = db.collection("sessions");
@@ -38,7 +45,9 @@ impl ServiceContainer {
             session: SessionService::new(session_col),
             breed: BreedService::new(breed_col),
             bird: BirdService::new(bird_col),
-            geolocation: GeolocationService::new(geolocation_col)
+            geolocation: GeolocationService::new(geolocation_col),
+            image: image_service
+            
         }
     }
 }
@@ -61,7 +70,7 @@ async fn main() -> std::io::Result<()> {
     let db = client.database(&config_struct.mongodb_database);
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     HttpServer::new(move || {
-        let service_container = ServiceContainer::new(db.clone());
+        let service_container = ServiceContainer::new(db.clone(), config_struct.image_directory.clone());
 
         App::new()
             .data(AppState { service_container })
@@ -71,6 +80,7 @@ async fn main() -> std::io::Result<()> {
             .service(controller::bird::birds_get)
             .service(controller::breed::breeds_post)
             .service(controller::nestbox::nestboxes_locations_post)
+            .service(controller::nestbox::nestboxes_images_post)
             .wrap(Logger::default())
     })
     .bind(server_http_bind)?

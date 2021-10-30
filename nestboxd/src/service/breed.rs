@@ -16,7 +16,7 @@ pub struct BreedService {
 }
 
 impl BreedService {
-    pub fn new(collection: Collection) -> BreedService {
+    pub fn new(collection: Collection) -> Self {
         BreedService { collection }
     }
 

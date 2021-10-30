@@ -10,7 +10,7 @@ pub struct BirdService {
 }
 
 impl BirdService {
-    pub fn new(collection: Collection) -> BirdService {
+    pub fn new(collection: Collection) -> Self {
         BirdService { collection }
     }
 

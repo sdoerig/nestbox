@@ -1,8 +1,10 @@
+use actix_multipart::Multipart;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 use serde::{Deserialize, Serialize};
 
 use crate::controller::error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR};
+
 
 use super::{
     error_message::{create_error_message, NOT_FOUND},
@@ -39,6 +41,37 @@ pub async fn nestboxes_get(
     }
 }
 
+
+#[post("/nestboxes/{uuid}/images")]
+pub async fn nestboxes_images_post(app_data: web::Data<crate::AppState>,
+    req: HttpRequest,
+    nestbox_req: web::Path<NestboxReq>,
+    payload: Multipart) -> impl Responder {
+
+        let session_uuid = parse_auth_header(&req);
+    let session = app_data
+        .service_container
+        .session
+        .validate_session(&session_uuid)
+        .await;
+    if !nestbox_req.is_valid() {
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+    }
+    if let Some(value) = nestbox_req_is_authorized(&session, &app_data, &nestbox_req).await {
+        return value;
+    }
+    let upload_status = app_data.service_container.image.save_file(payload).await;
+
+    match upload_status {
+        Some(file_name) => {
+
+            HttpResponse::Created().json(doc!{"file_name": file_name})
+        }
+        _ => HttpResponse::BadRequest().json(doc! {"notgood":0}),
+    }    
+} 
+
+
 #[post("/nestboxes/{uuid}/geolocations")]
 pub async fn nestboxes_locations_post(
     app_data: web::Data<crate::AppState>,
@@ -46,10 +79,11 @@ pub async fn nestboxes_locations_post(
     nestbox_req: web::Path<NestboxReq>,
     geoloc_req: web::Json<GeolocationReq>,
 ) -> impl Responder {
+    let session_uuid = parse_auth_header(&req);
     let session = app_data
         .service_container
         .session
-        .validate_session(&parse_auth_header(&req))
+        .validate_session(&session_uuid)
         .await;
     if !nestbox_req.is_valid() {
         return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))

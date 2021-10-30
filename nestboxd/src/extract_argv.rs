@@ -35,6 +35,7 @@ pub struct Config {
     pub mongodb_database: String,
     pub httpserver_ip: String,
     pub httpserver_port: String,
+    pub image_directory: String,
 }
 
 pub fn parse_yaml(config_file: String) -> Config {
@@ -52,6 +53,7 @@ pub fn parse_yaml(config_file: String) -> Config {
             .to_string(),
         httpserver_ip: config_doc["httpserver"]["ip"].as_str().unwrap().to_string(),
         httpserver_port: config_doc["httpserver"]["port"].as_str().unwrap().to_string(),
+        image_directory: config_doc["images"]["directory"].as_str().unwrap().to_string()
     }
 }
 
@@ -64,5 +66,6 @@ mod tests {
     fn test_config() {
         let config = parse_yaml(String::from("nestboxd_conf.yaml"));
         assert_eq!(config.httpserver_ip, String::from("127.0.0.1"));
+        assert_eq!(config.image_directory, String::from("/home/doerig/temp/nestbox_images"))
     }
 }
