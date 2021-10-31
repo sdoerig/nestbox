@@ -1,4 +1,5 @@
-use bson::{doc, Document};
+use actix_web::error::ErrorPaymentRequired;
+use bson::{doc, Bson, Document};
 
 use mongodb::{error::Error, Collection};
 
@@ -35,7 +36,21 @@ impl NestboxService {
         res
     }
 
-
+    pub async fn append_image_by_uuid(&self, uuid: &str, image: &str) -> bool {
+        //let update = doc!
+        let result = self
+            .collection
+            .update_one(
+                doc! {"uuid": uuid},
+                doc! {"$addToSet": doc!{"images":image}},
+                None,
+            )
+            .await;
+        match result {
+            Ok(_r) => true,
+            _error => false
+        }
+    }
 }
 #[cfg(test)]
 mod tests {

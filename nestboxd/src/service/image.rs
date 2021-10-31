@@ -16,13 +16,13 @@ impl ImageService {
 
     pub async fn save_file(&self, mut payload: Multipart) -> Option<String> {
         // iterate over multipart stream
-        let file_name = Uuid::new_v4().to_string();
+        let file_name_uuid = Uuid::new_v4().to_string();
         while let Ok(Some(mut field)) = payload.try_next().await {
             let content_type = field.content_disposition().unwrap();
             let filename = content_type.get_filename().unwrap();
+
             let filepath = format!("{}/{}.{}", &self.image_directory, 
-            &file_name,
-            "");
+            &file_name_uuid, "");
 
             // File::create is blocking operation, use threadpool
             let mut f = web::block(|| std::fs::File::create(filepath))
@@ -39,6 +39,6 @@ impl ImageService {
             }
         }
 
-        Some(file_name)
+        Some(file_name_uuid)
     }
 }
