@@ -36,20 +36,27 @@ impl NestboxService {
         res
     }
 
-    pub async fn append_image_by_uuid(&self, uuid: &str, image: &str) -> bool {
+    pub async fn append_image_by_uuid(&self, uuid: &str, images: &[String]) -> bool {
         //let update = doc!
-        let result = self
-            .collection
-            .update_one(
-                doc! {"uuid": uuid},
-                doc! {"$addToSet": doc!{"images":image}},
-                None,
-            )
-            .await;
-        match result {
-            Ok(_r) => true,
-            _error => false
+        let mut update_res = true;
+        for image in images {
+            let result = self
+                .collection
+                .update_one(
+                    doc! {"uuid": uuid},
+                    doc! {"$addToSet": doc!{"images":image}},
+                    None,
+                )
+                .await;
+            match result {
+                Ok(_r) => update_res = true,
+                _error => {
+                    update_res = false;
+                    break;
+                }
+            }
         }
+        update_res
     }
 }
 #[cfg(test)]

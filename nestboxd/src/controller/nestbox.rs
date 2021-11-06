@@ -69,11 +69,11 @@ pub async fn nestboxes_images_post(
         {
             return HttpResponse::Created().json(doc! {"file_name": file_name})
         } else {
-            return HttpResponse::BadRequest().json(doc! {"notgood":1})
+            return HttpResponse::BadRequest().json(doc! {"file_name": "undefined"})
         }
     }
 
-    HttpResponse::BadRequest().json(doc! {"notgood":0})
+    HttpResponse::BadRequest().json(doc! {"file_name": "undefined"})
 }
 
 #[post("/nestboxes/{uuid}/geolocations")]
