@@ -8,8 +8,6 @@ use service::session::SessionService;
 use service::user::UserService;
 use service::bird::BirdService;
 use service::image::ImageService;
-
-
 mod controller;
 mod extract_argv;
 mod service;
@@ -19,7 +17,6 @@ mod service;
 
 //
 pub struct ServiceContainer {
-    db: Database,
     image: ImageService,
     nestbox: NestboxService,
     user: UserService,
@@ -31,22 +28,14 @@ pub struct ServiceContainer {
 
 impl ServiceContainer {
     pub fn new(db: Database, image_directory: String) -> Self {
-        let image_service = ImageService::new(image_directory);
-        let nestboxes_col = db.collection("nestboxes");
-        let users_col = db.collection("users");
-        let session_col = db.collection("sessions");
-        let breed_col = db.collection("breeds");        
-        let bird_col = db.collection("birds");
-        let geolocation_col = db.collection("geolocations");
         ServiceContainer {
-            db,
-            nestbox: NestboxService::new(nestboxes_col),
-            user: UserService::new(users_col),
-            session: SessionService::new(session_col),
-            breed: BreedService::new(breed_col),
-            bird: BirdService::new(bird_col),
-            geolocation: GeolocationService::new(geolocation_col),
-            image: image_service
+            nestbox: NestboxService::new(&db),
+            user: UserService::new(&db),
+            session: SessionService::new(&db),
+            breed: BreedService::new(&db),
+            bird: BirdService::new(&db),
+            geolocation: GeolocationService::new(&db),
+            image: ImageService::new(image_directory)
             
         }
     }

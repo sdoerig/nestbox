@@ -2,10 +2,10 @@ use crate::controller::utilities::SessionObject;
 use actix_web::HttpRequest;
 use bson::{doc, Document};
 use chrono::Utc;
-use mongodb::{Collection};
+use mongodb::{Collection, Database};
 use uuid::Uuid;
 
-
+const SESSIONS: &str = "sessions"; 
 
 #[derive(Clone)]
 pub struct SessionService {
@@ -13,8 +13,8 @@ pub struct SessionService {
 }
 
 impl SessionService {
-    pub fn new(collection: Collection) -> SessionService {
-        SessionService { collection }
+    pub fn new(db: &Database) -> SessionService {
+        SessionService { collection: db.collection(SESSIONS) }
     }
 
     pub async fn create_session(&self, user_obj: Document) -> String {

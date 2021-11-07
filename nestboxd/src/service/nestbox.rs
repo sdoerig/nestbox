@@ -1,18 +1,16 @@
-use actix_web::error::ErrorPaymentRequired;
-use bson::{doc, Bson, Document};
-
-use mongodb::{error::Error, Collection};
-
+use bson::{doc, Document};
+use mongodb::{error::Error, Collection, Database};
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 
 #[derive(Clone)]
 pub struct NestboxService {
     collection: Collection,
 }
+const NESTBOX: &str = "nestboxes";
 
 impl NestboxService {
-    pub fn new(collection: Collection) -> NestboxService {
-        NestboxService { collection }
+    pub fn new(db: &Database) -> NestboxService {
+        NestboxService { collection: db.collection(NESTBOX) }
     }
 
     pub async fn get_by_uuid(&self, uuid: &str) -> Result<Option<Document>, Error> {
@@ -70,8 +68,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_service_nestbox_get_by_uuid_ok() {
-        let nestboxes_col = fetch_collection("nestboxes").await;
-        let nestbox_service = NestboxService::new(nestboxes_col);
+        let db = fetch_db().await;
+        let nestbox_service = NestboxService::new(&db);
 
         let nestbox = nestbox_service.get_by_uuid(NESTBOX_UUID_OK).await.unwrap();
         assert_eq!(
@@ -86,8 +84,8 @@ mod tests {
     }
     #[actix_rt::test]
     async fn test_service_nestbox_get_by_mandant_uuid_ok() {
-        let nestboxes_col = fetch_collection("nestboxes").await;
-        let nestbox_service = NestboxService::new(nestboxes_col);
+        let db = fetch_db().await;
+        let nestbox_service = NestboxService::new(&db);
         // Creating a mock session object
         let session_doc = doc! { "mandant_uuid" : "4ac9971c-91de-455c-a1fd-4b9dfb862cee",
         "username" : "fg_11", "uuid" : "15eaa6ca-4797-442b-b6c9-f1e7a1f3416d",
@@ -116,8 +114,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_service_nestbox_get_by_mandant_uuid_nok() {
-        let nestboxes_col = fetch_collection("nestboxes").await;
-        let nestbox_service = NestboxService::new(nestboxes_col);
+        let db = fetch_db().await;
+        let nestbox_service = NestboxService::new(&db);
         // Creating a mock session object
         let session_doc = doc! { "mandant_uuid" : "4ac9971c-91de-455c-a1fd-4b9dfb862cee", "username" : "fg_11", "uuid" : "15eaa6ca-4797-442b-b6c9-f1e7a1f3416d", "lastname" : "Gucker", "firstname" : "Fritz", "email" : "email_11@birdwatch.ch", "session_key" : "0e16a457-d957-431a-ba9e-ff3a961ed60e" };
 
@@ -132,11 +130,11 @@ mod tests {
         assert_eq!(nestbox, None);
     }
 
-    async fn fetch_collection(users_col: &str) -> Collection {
+    async fn fetch_db() -> Database {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
         let db = client.database("nestbox_testing");
-        db.collection(users_col)
+        db
     }
 }

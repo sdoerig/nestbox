@@ -8,7 +8,9 @@ use crate::controller::{
     utilities::{DocumentResponse, PagingQuery},
 };
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
-use mongodb::{error::Error, Collection};
+use mongodb::{error::Error, Collection, Database};
+
+const BREEDS: &str = "breeds";
 
 #[derive(Clone)]
 pub struct BreedService {
@@ -16,8 +18,8 @@ pub struct BreedService {
 }
 
 impl BreedService {
-    pub fn new(collection: Collection) -> Self {
-        BreedService { collection }
+    pub fn new(db: &Database) -> Self {
+        BreedService { collection: db.collection(BREEDS) }
     }
 
     pub async fn get_by_nestbox_uuid(
@@ -106,8 +108,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_service_breed_get_by_nestbox_uuid() {
-        let nestboxes_col = fetch_collection("breeds").await;
-        let breeds_service = BreedService::new(nestboxes_col);
+        let db = fetch_db().await;
+        let breeds_service = BreedService::new(&db);
         // Creating a mock session object
         let session_doc = doc! { "mandant_uuid" : "4ac9971c-91de-455c-a1fd-4b9dfb862cee",
         "username" : "fg_11", "uuid" : "15eaa6ca-4797-442b-b6c9-f1e7a1f3416d",
@@ -135,11 +137,11 @@ mod tests {
         assert_eq!(breeds_response.page_limit, 2_i64);
     }
 
-    async fn fetch_collection(users_col: &str) -> Collection {
+    async fn fetch_db() -> Database {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
         let db = client.database("nestbox_testing");
-        db.collection(users_col)
+        db
     }
 }

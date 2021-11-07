@@ -2,7 +2,9 @@ use bson::doc;
 
 use super::service_helper as sa;
 use crate::controller::utilities::{DocumentResponse, PagingQuery, SessionObject};
-use mongodb::{error::Error, Collection};
+use mongodb::{error::Error, Collection, Database};
+
+const BIRDS: &str = "birds";
 
 #[derive(Clone)]
 pub struct BirdService {
@@ -10,8 +12,8 @@ pub struct BirdService {
 }
 
 impl BirdService {
-    pub fn new(collection: Collection) -> Self {
-        BirdService { collection }
+    pub fn new(db: &Database) -> Self {
+        BirdService { collection: db.collection(BIRDS) }
     }
 
     pub async fn get_by_mandant_uuid(

@@ -4,7 +4,9 @@ use uuid::Uuid;
 
 use super::service_helper::{InsertResult};
 
-use mongodb::{Collection};
+use mongodb::{Collection, Database};
+
+const GEOLOCATIONS: &str = "geolocations";
 
 #[derive(Clone)]
 pub struct GeolocationService {
@@ -12,8 +14,8 @@ pub struct GeolocationService {
 }
 
 impl GeolocationService {
-    pub fn new(collection: Collection) -> Self {
-        GeolocationService { collection }
+    pub fn new(db: &Database) -> Self {
+        GeolocationService { collection: db.collection(GEOLOCATIONS) }
     }
 
     pub async fn post_geolocation(&self, nestbox_uuid: &str, long: f32, lat: f32) -> InsertResult {
