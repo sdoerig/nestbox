@@ -4,7 +4,7 @@ use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 
 use super::{
-    error_message::{create_error_message, INTERNAL_SERVER_ERROR, NESTBOX_OF_OTHER_MANDANT},
+    error_message::{create_error_message, INTERNAL_SERVER_ERROR},
     req_structs::{BirdReq, NestboxReq},
     utilities::parse_auth_header,
 };

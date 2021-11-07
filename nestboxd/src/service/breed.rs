@@ -101,7 +101,7 @@ impl BreedService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mongodb::{options::ClientOptions, Client, Collection};
+    use mongodb::{options::ClientOptions, Client};
 
     // Nestbox from mandant_uuid 4ac9971c-91de-455c-a1fd-4b9dfb862cee
     const NESTBOX_UUID_OK: &str = "a446545d-f594-4eb5-96b4-c2312554050c";
@@ -141,7 +141,7 @@ mod tests {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
-        let db = client.database("nestbox_testing");
-        db
+        
+        client.database("nestbox_testing")
     }
 }

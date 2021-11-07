@@ -39,7 +39,7 @@ pub async fn login_post(
         
         None => {
             app_data.service_container.session.remove_session_by_username(&login.username).await;
-            return HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED))
+            HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED))
         }
-    };
+    }
 }

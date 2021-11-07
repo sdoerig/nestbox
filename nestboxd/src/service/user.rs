@@ -39,8 +39,8 @@ impl UserService {
         }
         if is_password_correct(
             password,
-            &pw_hash_salt.get(0).unwrap(),
-            &pw_hash_salt.get(1).unwrap(),
+            pw_hash_salt.get(0).unwrap(),
+            pw_hash_salt.get(1).unwrap(),
         ) {
             return Some(userobj);
         }
@@ -72,7 +72,7 @@ mod tests {
         assert_eq!(
             login_positive
                 .unwrap()
-                .get(&"username")
+                .get("username")
                 .unwrap()
                 .to_string()
                 .replace('"', ""),
@@ -115,7 +115,7 @@ mod tests {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
-        let db = client.database("nestbox_testing");
-        db
+        
+        client.database("nestbox_testing")
     }
 }

@@ -61,15 +61,15 @@ impl SessionObject {
         }
 
         let (valid_mandant, mandant_uuid) = match session_document.get("mandant_uuid") {
-            Some(b) => (true, b.to_string().replace('"', &"")),
+            Some(b) => (true, b.to_string().replace('"', "")),
             None => (false, String::from("n.a.")),
         };
         let (valid_session_key, session_key) = match session_document.get("session_key") {
-            Some(b) => (true, b.to_string().replace('"', &"")),
+            Some(b) => (true, b.to_string().replace('"', "")),
             None => (false, String::from("n.a.")),
         };
         let (valid_user_uuid, user_uuid) = match session_document.get("uuid") {
-            Some(b) => (true, b.to_string().replace('"', &"")),
+            Some(b) => (true, b.to_string().replace('"', "")),
             None => (false, String::from("n.a.")),
         };
 
