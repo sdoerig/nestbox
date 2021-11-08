@@ -21,7 +21,7 @@ struct NestboxResponse {
 pub async fn nestboxes_get(
     app_data: web::Data<crate::AppState>,
     nestbox: web::Path<NestboxReq>,
-) -> impl Responder {
+) -> HttpResponse {
     if !nestbox.is_valid() {
         return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
@@ -114,3 +114,5 @@ pub async fn nestboxes_locations_post(
         }
     }
 }
+
+
