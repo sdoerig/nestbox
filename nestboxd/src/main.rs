@@ -76,14 +76,14 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::controller::nestbox::NestboxResponse;
+    use crate::controller::res_structs::NestboxResponse;
 
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
     
     #[actix_rt::test]
-    async fn test_index_get() {
+    async fn test_nestbox_get() {
         let mut app = test::init_service(
             App::new()
                 .data(AppState {
