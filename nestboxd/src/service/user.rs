@@ -12,7 +12,9 @@ pub struct UserService {
 
 impl UserService {
     pub fn new(db: &Database) -> UserService {
-        UserService { collection: db.collection(USERS) }
+        UserService {
+            collection: db.collection(USERS),
+        }
     }
 
     pub async fn login(&self, username: &str, password: &str) -> Option<Document> {
@@ -104,18 +106,15 @@ mod tests {
         let session_service = SessionService::new(&db);
         let login_false = user_service.login("fg_10", "secret").await;
         assert_eq!(&login_false, &None);
-        let session_object = session_service
-            .validate_session("n.a.")
-            .await;
+        let session_object = session_service.validate_session("n.a.").await;
         assert!(!session_object.is_valid_session());
-        
     }
 
     async fn fetch_db() -> Database {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
-        
+
         client.database("nestbox_testing")
     }
 }

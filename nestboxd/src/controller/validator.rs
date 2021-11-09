@@ -11,7 +11,8 @@ pub fn is_uuid(uuid: &str) -> bool {
     // e.g. 9496be03-8e94-48c9-ad08-0e6fa8b37c20
     //
     lazy_static! {
-        static ref UUID_PATTERN: Regex = Regex::new("^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$").unwrap();
+        static ref UUID_PATTERN: Regex =
+            Regex::new("^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$").unwrap();
     }
     UUID_PATTERN.is_match(uuid)
 }

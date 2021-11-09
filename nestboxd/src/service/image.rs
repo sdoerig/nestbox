@@ -55,7 +55,6 @@ impl ImageService {
                     file_names.push(file_name);
                 }
             } else if std::fs::remove_file(&filepath_check_type).is_ok() {
-                
             }
         }
 

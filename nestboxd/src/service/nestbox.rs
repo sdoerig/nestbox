@@ -1,6 +1,6 @@
+use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use bson::{doc, Document};
 use mongodb::{error::Error, Collection, Database};
-use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 
 #[derive(Clone)]
 pub struct NestboxService {
@@ -10,7 +10,9 @@ const NESTBOX: &str = "nestboxes";
 
 impl NestboxService {
     pub fn new(db: &Database) -> NestboxService {
-        NestboxService { collection: db.collection(NESTBOX) }
+        NestboxService {
+            collection: db.collection(NESTBOX),
+        }
     }
 
     pub async fn get_by_uuid(&self, uuid: &str) -> Result<Option<Document>, Error> {
@@ -134,7 +136,7 @@ mod tests {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
-        
+
         client.database("nestbox_testing")
     }
 }

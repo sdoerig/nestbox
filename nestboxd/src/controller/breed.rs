@@ -1,5 +1,7 @@
-use crate::controller::{error_message::BAD_REQUEST, utilities::nestbox_req_is_authorized, validator::Validator};
 pub use crate::controller::utilities::{PagingQuery, Sanatiz};
+use crate::controller::{
+    error_message::BAD_REQUEST, utilities::nestbox_req_is_authorized, validator::Validator,
+};
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use bson::doc;
 
@@ -17,7 +19,7 @@ pub async fn breeds_get(
     mut paging: web::Query<PagingQuery>,
 ) -> impl Responder {
     if !breed_req.is_valid() {
-        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
 
     paging.sanatizing();
@@ -42,9 +44,8 @@ pub async fn breeds_post(
     nestbox_req: web::Path<NestboxReq>,
     bird_req: web::Json<BirdReq>,
 ) -> impl Responder {
-
     if !nestbox_req.is_valid() {
-        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST))
+        return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
 
     // To post a new breed which means the user has discovered a nest
@@ -69,8 +70,7 @@ pub async fn breeds_post(
     {
         Ok(d) => HttpResponse::Created().json(doc! {"inserted_id": d.inserted_id }),
         Err(_e) => {
-            HttpResponse::InternalServerError()
-                .json(create_error_message(INTERNAL_SERVER_ERROR))
+            HttpResponse::InternalServerError().json(create_error_message(INTERNAL_SERVER_ERROR))
         }
     }
 }

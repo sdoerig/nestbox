@@ -1,12 +1,12 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use bson::Document;
-use mongodb::{error::Error};
+use mongodb::error::Error;
 use serde::Deserialize;
 
 use serde::Serialize;
 
 use super::error_message::UNAUTHORIZED;
-use super::error_message::{NESTBOX_OF_OTHER_MANDANT, create_error_message};
+use super::error_message::{create_error_message, NESTBOX_OF_OTHER_MANDANT};
 use super::req_structs::NestboxReq;
 
 const MAX_PAGE_LIMIT: i64 = 100;
@@ -161,4 +161,3 @@ pub async fn nestbox_req_is_authorized(
         Err(_) => Some(HttpResponse::InternalServerError().json(())),
     }
 }
-

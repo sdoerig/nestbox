@@ -81,7 +81,7 @@ mod tests {
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
-    
+
     #[actix_rt::test]
     async fn test_nestbox_get() {
         let mut app = test::init_service(
@@ -100,7 +100,6 @@ mod tests {
         //let req =  test::TestRequest::get().uri("/nestboxes/9ede3c8c-f552-4f74-bb8c-0b574be9895c").to_request();
         let response: NestboxResponse = test::read_body_json(svr_resp).await;
         assert!(response.uuid == String::from("9ede3c8c-f552-4f74-bb8c-0b574be9895c"));
-
     }
 
     async fn get_db() -> Database {

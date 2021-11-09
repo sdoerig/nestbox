@@ -1,11 +1,10 @@
 use serde::Deserialize;
 
-use super::validator::{Validator, is_uuid};
+use super::validator::{is_uuid, Validator};
 
 #[derive(Deserialize)]
 pub struct NestboxReq {
     pub uuid: String,
-
 }
 
 impl Validator for NestboxReq {
@@ -17,15 +16,11 @@ impl Validator for NestboxReq {
 #[derive(Deserialize)]
 pub struct BirdReq {
     pub bird_uuid: String,
-    pub bird: String
+    pub bird: String,
 }
 
 #[derive(Deserialize)]
 pub struct GeolocationReq {
     pub long: f32,
-    pub lat: f32
+    pub lat: f32,
 }
-
-
-
-

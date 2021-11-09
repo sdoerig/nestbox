@@ -2,7 +2,7 @@ use bson::doc;
 use chrono::{Duration, Utc};
 use uuid::Uuid;
 
-use super::service_helper::{InsertResult};
+use super::service_helper::InsertResult;
 
 use mongodb::{Collection, Database};
 
@@ -15,7 +15,9 @@ pub struct GeolocationService {
 
 impl GeolocationService {
     pub fn new(db: &Database) -> Self {
-        GeolocationService { collection: db.collection(GEOLOCATIONS) }
+        GeolocationService {
+            collection: db.collection(GEOLOCATIONS),
+        }
     }
 
     pub async fn post_geolocation(&self, nestbox_uuid: &str, long: f32, lat: f32) -> InsertResult {
@@ -30,7 +32,7 @@ impl GeolocationService {
             )
             .await
         {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(_) => return InsertResult::TerminationError,
         };
 

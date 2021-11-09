@@ -5,7 +5,7 @@ use chrono::Utc;
 use mongodb::{Collection, Database};
 use uuid::Uuid;
 
-const SESSIONS: &str = "sessions"; 
+const SESSIONS: &str = "sessions";
 
 #[derive(Clone)]
 pub struct SessionService {
@@ -14,7 +14,9 @@ pub struct SessionService {
 
 impl SessionService {
     pub fn new(db: &Database) -> SessionService {
-        SessionService { collection: db.collection(SESSIONS) }
+        SessionService {
+            collection: db.collection(SESSIONS),
+        }
     }
 
     pub async fn create_session(&self, user_obj: Document) -> String {
@@ -50,13 +52,9 @@ impl SessionService {
     }
 
     pub async fn validate_session(&self, session_token: &str) -> SessionObject {
-        
         let session_obj = self
             .collection
-            .find_one(
-                doc! {"session_key": session_token},
-                None,
-            )
+            .find_one(doc! {"session_key": session_token}, None)
             .await;
 
         SessionObject::new(session_obj)

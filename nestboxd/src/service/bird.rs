@@ -13,7 +13,9 @@ pub struct BirdService {
 
 impl BirdService {
     pub fn new(db: &Database) -> Self {
-        BirdService { collection: db.collection(BIRDS) }
+        BirdService {
+            collection: db.collection(BIRDS),
+        }
     }
 
     pub async fn get_by_mandant_uuid(
@@ -53,7 +55,5 @@ impl BirdService {
             .await
     }
 
-    pub async fn get_by_uuid_and_mandant_uuid() {
-        
-    }
+    pub async fn get_by_uuid_and_mandant_uuid() {}
 }

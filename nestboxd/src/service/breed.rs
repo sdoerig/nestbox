@@ -19,7 +19,9 @@ pub struct BreedService {
 
 impl BreedService {
     pub fn new(db: &Database) -> Self {
-        BreedService { collection: db.collection(BREEDS) }
+        BreedService {
+            collection: db.collection(BREEDS),
+        }
     }
 
     pub async fn get_by_nestbox_uuid(
@@ -141,7 +143,7 @@ mod tests {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
         let client_options = client_options_future.await.unwrap();
         let client = Client::with_options(client_options).unwrap();
-        
+
         client.database("nestbox_testing")
     }
 }

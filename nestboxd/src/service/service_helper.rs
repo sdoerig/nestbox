@@ -1,8 +1,10 @@
-use bson::{ Document};
+use bson::Document;
 use futures::StreamExt;
-use mongodb::{error::Error};
+use mongodb::error::Error;
 
-pub(crate) async fn read_mongodb_cursor(blocked_res: Result<mongodb::Cursor, Error>) -> Vec<Document> {
+pub(crate) async fn read_mongodb_cursor(
+    blocked_res: Result<mongodb::Cursor, Error>,
+) -> Vec<Document> {
     let mut documents: Vec<Document> = Vec::new();
     let result_documents = match blocked_res {
         Ok(c) => c.collect().await,
@@ -20,5 +22,5 @@ pub(crate) async fn read_mongodb_cursor(blocked_res: Result<mongodb::Cursor, Err
 pub enum InsertResult {
     Ok(String),
     TerminationError,
-    InsertError
+    InsertError,
 }

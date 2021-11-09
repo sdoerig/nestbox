@@ -1,7 +1,7 @@
 use getopts::Options;
+use std::env;
 use std::process;
-use std::{env};
-use yaml_rust::{YamlLoader};
+use yaml_rust::YamlLoader;
 
 fn print_usage(program: &str, opts: &Options) {
     let brief = format!("Usage: {} -c CONFIG_FILE", program);
@@ -52,8 +52,14 @@ pub fn parse_yaml(config_file: String) -> Config {
             .unwrap()
             .to_string(),
         httpserver_ip: config_doc["httpserver"]["ip"].as_str().unwrap().to_string(),
-        httpserver_port: config_doc["httpserver"]["port"].as_str().unwrap().to_string(),
-        image_directory: config_doc["images"]["directory"].as_str().unwrap().to_string()
+        httpserver_port: config_doc["httpserver"]["port"]
+            .as_str()
+            .unwrap()
+            .to_string(),
+        image_directory: config_doc["images"]["directory"]
+            .as_str()
+            .unwrap()
+            .to_string(),
     }
 }
 
@@ -66,6 +72,9 @@ mod tests {
     fn test_config() {
         let config = parse_yaml(String::from("nestboxd_conf.yaml"));
         assert_eq!(config.httpserver_ip, String::from("127.0.0.1"));
-        assert_eq!(config.image_directory, String::from("/home/doerig/temp/nestbox_images"))
+        assert_eq!(
+            config.image_directory,
+            String::from("/home/doerig/temp/nestbox_images")
+        )
     }
 }

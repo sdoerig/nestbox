@@ -1,10 +1,12 @@
 use actix_multipart::Multipart;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
-use bson::{Document, doc};
+use bson::{doc, Document};
 use chrono::format::StrftimeItems;
 
-
-use crate::controller::{error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR}, res_structs::{MapDocument, NestboxResponse}};
+use crate::controller::{
+    error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR},
+    res_structs::{MapDocument, NestboxResponse},
+};
 
 use super::{
     error_message::{create_error_message, NOT_FOUND},
@@ -12,8 +14,6 @@ use super::{
     utilities::{nestbox_req_is_authorized, parse_auth_header},
     validator::Validator,
 };
-
-
 
 #[get("/nestboxes/{uuid}")]
 pub async fn nestboxes_get(
@@ -65,9 +65,9 @@ pub async fn nestboxes_images_post(
             .append_image_by_uuid(&nestbox_req.uuid, &file_name)
             .await
         {
-            return HttpResponse::Created().json(doc! {"file_name": file_name})
+            return HttpResponse::Created().json(doc! {"file_name": file_name});
         } else {
-            return HttpResponse::BadRequest().json(doc! {"file_name": "undefined"})
+            return HttpResponse::BadRequest().json(doc! {"file_name": "undefined"});
         }
     }
 
@@ -112,5 +112,3 @@ pub async fn nestboxes_locations_post(
         }
     }
 }
-
-
