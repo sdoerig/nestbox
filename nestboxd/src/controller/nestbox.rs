@@ -1,6 +1,7 @@
 use actix_multipart::Multipart;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
-use bson::doc;
+use bson::{Document, doc};
+use chrono::format::StrftimeItems;
 use serde::{Deserialize, Serialize};
 
 use crate::controller::error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR};
@@ -13,8 +14,18 @@ use super::{
 };
 
 #[derive(Serialize, Deserialize)]
-struct NestboxResponse {
-    uuid: String,
+pub struct NestboxResponse {
+    pub uuid: String,
+}
+
+impl NestboxResponse {
+    pub fn new(doc: Document) -> Self {
+        let mut uuid = String::from("");
+        if let Some(b) = doc.get("uuid") {
+            uuid = b.to_string().replace('"', "");
+        }
+        NestboxResponse { uuid }
+    }
 }
 
 #[get("/nestboxes/{uuid}")]
@@ -33,7 +44,7 @@ pub async fn nestboxes_get(
         .await;
     match result {
         Ok(doc) => match doc {
-            Some(d) => HttpResponse::Ok().json(d),
+            Some(d) => HttpResponse::Ok().json(NestboxResponse::new(d)),
             None => HttpResponse::NotFound().json(create_error_message(NOT_FOUND)),
         },
         Err(_e) => HttpResponse::NotFound().finish(),

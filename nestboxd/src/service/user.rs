@@ -94,7 +94,7 @@ mod tests {
 
         let session_obj = session_service.validate_session(&session_object).await;
 
-        assert_eq!(session_obj.is_valid_session(), true);
+        assert!(session_obj.is_valid_session());
     }
 
     #[actix_rt::test]
@@ -107,7 +107,7 @@ mod tests {
         let session_object = session_service
             .validate_session("n.a.")
             .await;
-        assert_eq!(session_object.is_valid_session(), false);
+        assert!(!session_object.is_valid_session());
         
     }
 

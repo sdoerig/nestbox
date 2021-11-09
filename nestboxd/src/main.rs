@@ -76,6 +76,8 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use crate::controller::nestbox::NestboxResponse;
+
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
@@ -96,8 +98,8 @@ mod tests {
             .await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
         //let req =  test::TestRequest::get().uri("/nestboxes/9ede3c8c-f552-4f74-bb8c-0b574be9895c").to_request();
-        //let response: serde_json::Value = test::read_body_json(svr_resp).await;
-        //assert!(response["uuid"] == String::from(""));
+        let response: NestboxResponse = test::read_body_json(svr_resp).await;
+        assert!(response.uuid == String::from("9ede3c8c-f552-4f74-bb8c-0b574be9895c"));
 
     }
 
