@@ -16,6 +16,33 @@ impl NestboxService {
     }
 
     pub async fn get_by_uuid(&self, uuid: &str) -> Result<Option<Document>, Error> {
+        /*
+        Example aggreation request
+        {"$match": {"uuid": {"$eq": "4ea60d3e-4a81-4bcc-b96a-c508fe73a48a"}}},
+{"$skip": 0},
+{"$limit": 1},
+{
+  $lookup: {
+    "from": "mandants", 
+    "let": {
+      "nestboxes_mandant_uuid": "$mandant_uuid"}, 
+    "pipeline": [
+                      {
+                        "$match": {
+                          "$expr": {
+                            "$eq": [
+                              "$$nestboxes_mandant_uuid", "$uuid"
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "$project": {
+                           "_id":0, "uuid": 1, "name": 1, "website": 1
+                        }
+                      }
+                    ], "as": "mandant"}}, {"$project": {"_id": 0}}
+        */
         let res = self.collection.find_one(doc! {"uuid": uuid}, None).await;
         res
     }
