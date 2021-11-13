@@ -36,7 +36,7 @@ pub async fn login_post(
                     .session
                     .create_session(user_obj)
                     .await, //String::from("n.a."),
-            })
+            });
         }
 
         None => {

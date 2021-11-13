@@ -4,24 +4,62 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct NestboxResponse {
     pub uuid: String,
-    pub created_at: String
+    pub created_at: String,
+    pub images: Vec<String>,
+    pub mandant_uuid: String,
+    pub mandant_name: String,
+    pub mandant_website: String
 }
-
 
 pub trait MapDocument {
-    fn map_doc(doc: Document) -> Self;
+    fn map_doc(doc: &Document) -> Self;
 }
 
+
+
 impl MapDocument for NestboxResponse {
-    fn map_doc(doc: Document) -> Self {
-        let mut uuid = String::from("");
-        let mut created_at = String::from("");
+    /*
+    {"public":true,
+    "uuid":"1bec20fc-5416-4941-b7e4-e15aa26a5c7a",
+    "mandant_uuid":"c7d880d5-c98d-40ee-bced-b5a0165420c0",
+    "created_at":{"$date":"2021-06-01T18:36:38.418Z"},
+    "mandant":[{"uuid":"c7d880d5-c98d-40ee-bced-b5a0165420c0","name":"BirdLife 0","website":"https://www.birdwatcher.ch"}]}
+     */
+    fn map_doc(doc: &Document) -> Self {
+        let mut uuid = String::new();
+        let mut created_at = String::new();
+        let mut mandant_uuid = String::new();
+        let mut mandant_name = String::new();
+        let mut mandant_website = String::new();
+        let mut images: Vec<String> = Vec::new();
         if let Some(b) = doc.get("uuid") {
             uuid = b.to_string().replace('"', "");
         }
         if let Some(b) = doc.get("created_at") {
             created_at = b.as_datetime().unwrap().to_string();
         }
-        NestboxResponse { uuid, created_at}
+        if let Ok(v) = doc.get_array("images") {
+            for i in v {
+                images.push(i.to_string().replace('"', ""));
+            }
+
+        }
+        if let Some(b) = doc.get("mandant_uuid") {
+            mandant_uuid = b.to_string().replace('"', "");
+        }
+        if let Ok(v) = doc.get_array("mandant") {
+            if let Some(t) = v.get(0) {
+                if let Some(d) = t.as_document() {
+                    if let Some(val) = d.get("name") {
+                        mandant_name = val.to_string().replace('"', "");
+                    }
+                    if let Some(val) = d.get("website") {
+                        mandant_website = val.to_string().replace('"', "");
+                    }
+
+                }
+            }
+        }
+        NestboxResponse { uuid, created_at, images, mandant_uuid, mandant_name, mandant_website }
     }
 }

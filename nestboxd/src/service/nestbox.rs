@@ -1,3 +1,4 @@
+use super::service_helper as sa;
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use bson::{doc, Document};
 use mongodb::{error::Error, Collection, Database};
@@ -15,36 +16,68 @@ impl NestboxService {
         }
     }
 
-    pub async fn get_by_uuid(&self, uuid: &str) -> Result<Option<Document>, Error> {
+    pub async fn get_by_uuid(&self, uuid: &str) -> Vec<Document> {
         /*
-        Example aggreation request
-        {"$match": {"uuid": {"$eq": "4ea60d3e-4a81-4bcc-b96a-c508fe73a48a"}}},
-{"$skip": 0},
-{"$limit": 1},
-{
-  $lookup: {
-    "from": "mandants", 
-    "let": {
-      "nestboxes_mandant_uuid": "$mandant_uuid"}, 
-    "pipeline": [
-                      {
-                        "$match": {
-                          "$expr": {
-                            "$eq": [
-                              "$$nestboxes_mandant_uuid", "$uuid"
-                            ]
-                          }
-                        }
-                      },
-                      {
-                        "$project": {
-                           "_id":0, "uuid": 1, "name": 1, "website": 1
-                        }
-                      }
-                    ], "as": "mandant"}}, {"$project": {"_id": 0}}
-        */
-        let res = self.collection.find_one(doc! {"uuid": uuid}, None).await;
-        res
+                Example aggreation request
+                {"$match": {"uuid": {"$eq": "4ea60d3e-4a81-4bcc-b96a-c508fe73a48a"}}},
+        {"$skip": 0},
+        {"$limit": 1},
+        {
+          $lookup: {
+            "from": "mandants",
+            "let": {
+              "nestboxes_mandant_uuid": "$mandant_uuid"},
+            "pipeline": [
+                              {
+                                "$match": {
+                                  "$expr": {
+                                    "$eq": [
+                                      "$$nestboxes_mandant_uuid", "$uuid"
+                                    ]
+                                  }
+                                }
+                              },
+                              {
+                                "$project": {
+                                   "_id":0, "uuid": 1, "name": 1, "website": 1
+                                }
+                              }
+                            ], "as": "mandant"}}, {"$project": {"_id": 0}}
+                */
+        let res = self
+            .collection
+            .aggregate(
+                vec![
+                    doc! {"$match": {"uuid": {"$eq": uuid}}},
+                    doc! {"$skip": 0},
+                    doc! {"$limit": 1},
+                    doc! {"$lookup": {
+                    "from": "mandants",
+                     "let": {
+                       "nestboxes_mandant_uuid": "$mandant_uuid"},
+                     "pipeline": [
+                                    {
+                                      "$match": {
+                                        "$expr": {
+                                          "$eq": [
+                                            "$$nestboxes_mandant_uuid", "$uuid"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "$project": {
+                                         "_id":0, "uuid": 1, "name": 1, "website": 1
+                                      }
+                                    }
+                                  ], "as": "mandant"}},
+                    doc! {"$project": {"_id": 0}},
+                ],
+                None,
+            )
+            .await;
+        let nestbox = sa::read_mongodb_cursor(res).await;
+        nestbox
     }
 
     pub async fn get_by_mandant_uuid(
@@ -100,9 +133,10 @@ mod tests {
         let db = fetch_db().await;
         let nestbox_service = NestboxService::new(&db);
 
-        let nestbox = nestbox_service.get_by_uuid(NESTBOX_UUID_OK).await.unwrap();
+        let nestbox = nestbox_service.get_by_uuid(NESTBOX_UUID_OK).await;
         assert_eq!(
             nestbox
+                .get(0)
                 .unwrap()
                 .get("uuid")
                 .unwrap()

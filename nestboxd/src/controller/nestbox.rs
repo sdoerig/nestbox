@@ -29,12 +29,9 @@ pub async fn nestboxes_get(
         .nestbox
         .get_by_uuid(&nestbox.uuid)
         .await;
-    match result {
-        Ok(doc) => match doc {
-            Some(d) => HttpResponse::Ok().json(NestboxResponse::map_doc(d)),
-            None => HttpResponse::NotFound().json(create_error_message(NOT_FOUND)),
-        },
-        Err(_e) => HttpResponse::NotFound().finish(),
+    match result.get(0) {
+        Some(doc) => HttpResponse::Ok().json(NestboxResponse::map_doc(doc)),
+        None => HttpResponse::NotFound().finish(),
     }
 }
 
