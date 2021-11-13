@@ -76,14 +76,69 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::controller::res_structs::NestboxResponse;
+    use crate::controller::{
+        res_structs::{LoginResponse, NestboxResponse},
+        validator::is_uuid,
+    };
 
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    pub struct UserDataRequest {
+        pub username: String,
+        pub password: String,
+    }
 
     #[actix_rt::test]
-    async fn test_nestbox_get() {
+    async fn test_200_login_post_ok() {
+        let uri = "/login";
+        // {"username":"fg_199","password":"secretbird"}
+        let user_name = String::from("fg_199");
+        let user_data = UserDataRequest {
+            username: user_name.clone(),
+            password: String::from("secretbird"),
+        };
+        let svr_resp = build_login_post_app(uri, &user_data).await;
+        assert_eq!(svr_resp.status(), StatusCode::OK);
+        let response: LoginResponse = test::read_body_json(svr_resp).await;
+        assert!(response.success);
+        assert!(response.username == user_name);
+        assert!(is_uuid(&response.session))
+    }
+
+    #[actix_rt::test]
+    async fn test_401_login_post_nok() {
+        let uri = "/login";
+        // {"username":"fg_199","password":"secretbird"}
+        let user_name = String::from("fg_199");
+        let user_data = UserDataRequest {
+            username: user_name.clone(),
+            password: String::from("wronpass"),
+        };
+        let svr_resp = build_login_post_app(uri, &user_data).await;
+        assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[actix_rt::test]
+    async fn test_200_nestbox_get() {
+        let uri = "/nestboxes/9ede3c8c-f552-4f74-bb8c-0b574be9895c";
+        let svr_resp = build_nest_box_app(uri).await;
+        assert_eq!(svr_resp.status(), StatusCode::OK);
+        let response: NestboxResponse = test::read_body_json(svr_resp).await;
+        assert!(response.uuid == String::from("9ede3c8c-f552-4f74-bb8c-0b574be9895c"));
+    }
+
+    #[actix_rt::test]
+    async fn test_404_nestbox_get() {
+        let uri = "/nestboxes/9ede3c8c-eeee-ffff-aaaa-0b574be9895c";
+        let svr_resp = build_nest_box_app(uri).await;
+        assert_eq!(svr_resp.status(), StatusCode::NOT_FOUND);
+    }
+
+    async fn build_nest_box_app(uri: &str) -> actix_web::dev::ServiceResponse {
         let mut app = test::init_service(
             App::new()
                 .data(AppState {
@@ -93,13 +148,32 @@ mod tests {
         )
         .await;
         let svr_resp = test::TestRequest::get()
-            .uri("/nestboxes/9ede3c8c-f552-4f74-bb8c-0b574be9895c")
+            .uri(uri)
             .send_request(&mut app)
             .await;
-        assert_eq!(svr_resp.status(), StatusCode::OK);
-        //let req =  test::TestRequest::get().uri("/nestboxes/9ede3c8c-f552-4f74-bb8c-0b574be9895c").to_request();
-        let response: NestboxResponse = test::read_body_json(svr_resp).await;
-        assert!(response.uuid == String::from("9ede3c8c-f552-4f74-bb8c-0b574be9895c"));
+        svr_resp
+    }
+
+    async fn build_login_post_app(
+        uri: &str,
+        user_data: &UserDataRequest,
+    ) -> actix_web::dev::ServiceResponse {
+        let mut app = test::init_service(
+            App::new()
+                .data(AppState {
+                    service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                })
+                .service(controller::user::login_post),
+        )
+        .await;
+        //TestRequest::post().uri("/users").set_json
+        let svr_resp = test::TestRequest::post()
+            .uri(uri)
+            .header("Content-Type", "application/json")
+            .set_json(user_data)
+            .send_request(&mut app)
+            .await;
+        svr_resp
     }
 
     async fn get_db() -> Database {

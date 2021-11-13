@@ -1,6 +1,10 @@
 use bson::Document;
 use serde::{Deserialize, Serialize};
 
+pub trait MapDocument {
+    fn map_doc(doc: &Document) -> Self;
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct NestboxResponse {
     pub uuid: String,
@@ -8,14 +12,8 @@ pub struct NestboxResponse {
     pub images: Vec<String>,
     pub mandant_uuid: String,
     pub mandant_name: String,
-    pub mandant_website: String
+    pub mandant_website: String,
 }
-
-pub trait MapDocument {
-    fn map_doc(doc: &Document) -> Self;
-}
-
-
 
 impl MapDocument for NestboxResponse {
     /*
@@ -42,7 +40,6 @@ impl MapDocument for NestboxResponse {
             for i in v {
                 images.push(i.to_string().replace('"', ""));
             }
-
         }
         if let Some(b) = doc.get("mandant_uuid") {
             mandant_uuid = b.to_string().replace('"', "");
@@ -56,10 +53,48 @@ impl MapDocument for NestboxResponse {
                     if let Some(val) = d.get("website") {
                         mandant_website = val.to_string().replace('"', "");
                     }
-
                 }
             }
         }
-        NestboxResponse { uuid, created_at, images, mandant_uuid, mandant_name, mandant_website }
+        NestboxResponse {
+            uuid,
+            created_at,
+            images,
+            mandant_uuid,
+            mandant_name,
+            mandant_website,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LoginResponse {
+    pub username: String,
+    pub success: bool,
+    pub session: String,
+}
+
+impl MapDocument for LoginResponse {
+    /*
+    {"username":"fg_199","success":true,"session":"28704470-0908-408e-938f-64dd2b7578b9"}
+     */
+    fn map_doc(doc: &Document) -> Self {
+        let mut username = String::new();
+        let mut success = false;
+        let mut session = String::new();
+        if let Some(b) = doc.get("username") {
+            username = b.to_string().replace('"', "");
+        }
+        if let Some(b) = doc.get("success") {
+            success = true;
+        }
+        if let Some(b) = doc.get("session") {
+            session = b.to_string().replace('"', "");
+        }
+        LoginResponse {
+            username,
+            success,
+            session,
+        }
     }
 }

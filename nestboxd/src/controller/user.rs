@@ -1,18 +1,14 @@
 use actix_web::{post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 
+use crate::controller::res_structs::LoginResponse;
+
 use super::error_message::{create_error_message, UNAUTHORIZED};
 
 #[derive(Deserialize, Serialize)]
 pub struct LoginReq {
     pub username: String,
     pub password: String,
-}
-#[derive(Deserialize, Serialize)]
-pub struct LoginRes {
-    pub username: String,
-    pub success: bool,
-    pub session: String,
 }
 
 #[post("/login")]
@@ -28,7 +24,7 @@ pub async fn login_post(
 
     match user_response {
         Some(user_obj) => {
-            return HttpResponse::Ok().json(LoginRes {
+            return HttpResponse::Ok().json(LoginResponse {
                 username: login.username.clone(),
                 success: true,
                 session: app_data
