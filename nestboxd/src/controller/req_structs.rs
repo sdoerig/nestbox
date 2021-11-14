@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::validator::{is_uuid, Validator};
 
@@ -23,4 +23,10 @@ pub struct BirdReq {
 pub struct GeolocationReq {
     pub long: f32,
     pub lat: f32,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct LoginReq {
+    pub username: String,
+    pub password: String,
 }

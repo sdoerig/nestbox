@@ -1,15 +1,8 @@
 use actix_web::{post, web, HttpResponse, Responder};
-use serde::{Deserialize, Serialize};
 
-use crate::controller::res_structs::LoginResponse;
+use crate::controller::{req_structs::LoginReq, res_structs::LoginResponse};
 
 use super::error_message::{create_error_message, UNAUTHORIZED};
-
-#[derive(Deserialize, Serialize)]
-pub struct LoginReq {
-    pub username: String,
-    pub password: String,
-}
 
 #[post("/login")]
 pub async fn login_post(

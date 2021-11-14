@@ -98,7 +98,7 @@ impl SessionObject {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct DocumentResponse {
     pub documents: Vec<Document>,
     pub counted_documents: i64,
