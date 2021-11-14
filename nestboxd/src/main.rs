@@ -90,7 +90,7 @@ mod tests {
     enum EndPoints {
         Birds,
         Geolocations,
-        Breeds
+        Breeds,
     }
 
     #[actix_rt::test]
@@ -142,7 +142,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_401_birds_get() {
         let uri = "/birds?page_limit=100&page_number=1";
-        let svr_resp = build_paging_get_app(EndPoints::Birds ,uri, "").await;
+        let svr_resp = build_paging_get_app(EndPoints::Birds, uri, "").await;
         assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
     }
 
@@ -169,43 +169,60 @@ mod tests {
                 "/birds?page_limit=100&page_number={}",
                 paging_response.page_number + 1
             );
-            let svr_resp = build_paging_get_app(EndPoints::Birds, &uri, &login_response.session).await;
+            let svr_resp =
+                build_paging_get_app(EndPoints::Birds, &uri, &login_response.session).await;
             paging_response = test::read_body_json(svr_resp).await;
         }
         assert!(total_documents == count_documents);
     }
 
-    async fn build_paging_get_app(endpoint: EndPoints, uri: &str, sessiontoken: &str) -> actix_web::dev::ServiceResponse {
+    async fn build_paging_get_app(
+        endpoint: EndPoints,
+        uri: &str,
+        sessiontoken: &str,
+    ) -> actix_web::dev::ServiceResponse {
         let mut app = match endpoint {
-            EndPoints::Birds => 
+            EndPoints::Birds => {
                 test::init_service(
                     App::new()
                         .data(AppState {
-                            service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                            service_container: ServiceContainer::new(
+                                get_db().await,
+                                String::from("/tmp/"),
+                            ),
                         })
                         .service(controller::bird::birds_get),
                 )
-                .await,
-            EndPoints::Geolocations => 
+                .await
+            }
+            EndPoints::Geolocations => {
                 test::init_service(
                     App::new()
                         .data(AppState {
-                            service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                            service_container: ServiceContainer::new(
+                                get_db().await,
+                                String::from("/tmp/"),
+                            ),
                         })
                         .service(controller::bird::birds_get),
                 )
-                .await,
-            EndPoints::Breeds => 
+                .await
+            }
+            EndPoints::Breeds => {
                 test::init_service(
                     App::new()
                         .data(AppState {
-                            service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                            service_container: ServiceContainer::new(
+                                get_db().await,
+                                String::from("/tmp/"),
+                            ),
                         })
                         .service(controller::bird::birds_get),
                 )
-                .await,
+                .await
+            }
         };
-        
+
         if is_uuid(sessiontoken) {
             test::TestRequest::get()
                 .uri(uri)
