@@ -76,12 +76,23 @@ async fn main() -> std::io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::controller::{req_structs::LoginReq, res_structs::{LoginResponse, NestboxResponse}, utilities::DocumentResponse, validator::is_uuid};
+    use crate::controller::{
+        req_structs::LoginReq,
+        res_structs::{LoginResponse, NestboxResponse},
+        utilities::DocumentResponse,
+        validator::is_uuid,
+    };
 
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
-    
+
+    enum EndPoints {
+        Birds,
+        Geolocations,
+        Breeds
+    }
+
     #[actix_rt::test]
     async fn test_200_login_post_ok() {
         let uri = "/login";
@@ -131,7 +142,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_401_birds_get() {
         let uri = "/birds?page_limit=100&page_number=1";
-        let svr_resp = build_birds_app(uri, "").await;
+        let svr_resp = build_paging_get_app(EndPoints::Birds ,uri, "").await;
         assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
     }
 
@@ -147,31 +158,54 @@ mod tests {
         let svr_login_resp = build_login_post_app(uri, &user_data).await;
         let login_response: LoginResponse = test::read_body_json(svr_login_resp).await;
         let uri = "/birds?page_limit=100&page_number=1";
-        let svr_resp = build_birds_app(uri, &login_response.session).await;
+        let svr_resp = build_paging_get_app(EndPoints::Birds, uri, &login_response.session).await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
         let mut paging_response: DocumentResponse = test::read_body_json(svr_resp).await;
         let total_documents = paging_response.counted_documents;
         let mut count_documents: i64 = 0;
         while !paging_response.documents.is_empty() {
             count_documents += paging_response.documents.len() as i64;
-            let uri = format!("/birds?page_limit=100&page_number={}", paging_response.page_number + 1);
-            let svr_resp = build_birds_app(&uri, &login_response.session).await;
+            let uri = format!(
+                "/birds?page_limit=100&page_number={}",
+                paging_response.page_number + 1
+            );
+            let svr_resp = build_paging_get_app(EndPoints::Birds, &uri, &login_response.session).await;
             paging_response = test::read_body_json(svr_resp).await;
         }
         assert!(total_documents == count_documents);
-        
     }
 
-
-    async fn build_birds_app(uri: &str, sessiontoken: &str) -> actix_web::dev::ServiceResponse {
-        let mut app = test::init_service(
-            App::new()
-                .data(AppState {
-                    service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
-                })
-                .service(controller::bird::birds_get),
-        )
-        .await;
+    async fn build_paging_get_app(endpoint: EndPoints, uri: &str, sessiontoken: &str) -> actix_web::dev::ServiceResponse {
+        let mut app = match endpoint {
+            EndPoints::Birds => 
+                test::init_service(
+                    App::new()
+                        .data(AppState {
+                            service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                        })
+                        .service(controller::bird::birds_get),
+                )
+                .await,
+            EndPoints::Geolocations => 
+                test::init_service(
+                    App::new()
+                        .data(AppState {
+                            service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                        })
+                        .service(controller::bird::birds_get),
+                )
+                .await,
+            EndPoints::Breeds => 
+                test::init_service(
+                    App::new()
+                        .data(AppState {
+                            service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
+                        })
+                        .service(controller::bird::birds_get),
+                )
+                .await,
+        };
+        
         if is_uuid(sessiontoken) {
             test::TestRequest::get()
                 .uri(uri)
