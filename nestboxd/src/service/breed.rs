@@ -1,5 +1,5 @@
-use bson::doc;
-use chrono::Utc;
+use mongodb::bson::{doc, DateTime, Document};
+//use chrono::Utc;
 use uuid::Uuid;
 
 use super::service_helper as sa;
@@ -14,7 +14,7 @@ const BREEDS: &str = "breeds";
 
 #[derive(Clone)]
 pub struct BreedService {
-    collection: Collection,
+    collection: Collection<Document>,
 }
 
 impl BreedService {
@@ -75,10 +75,10 @@ impl BreedService {
             Err(_e) => 0,
         };
 
-        DocumentResponse::new(documents, counted_documents, paging)
+        DocumentResponse::new(documents, counted_documents as i64, paging)
     }
 
-    pub async fn get_by_nestbox_count(&self, nestbox_uuid: &str) -> Result<i64, Error> {
+    pub async fn get_by_nestbox_count(&self, nestbox_uuid: &str) -> Result<u64, Error> {
         self.collection
             .count_documents(doc! {"nestbox_uuid": nestbox_uuid}, None)
             .await
@@ -94,7 +94,7 @@ impl BreedService {
         "uuid": Uuid::new_v4().to_string(),
         "nestbox_uuid": &nestbox_req.uuid,
         "user_uuid": session_obj.get_user_uuid(),
-        "discovery_date": Utc::now(),
+        "discovery_date": DateTime::now(),
         "bird_uuid": &bird.bird_uuid};
         self.collection.insert_one(breed, None).await
     }

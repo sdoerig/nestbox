@@ -1,4 +1,4 @@
-use bson::Document;
+use mongodb::bson::Document;
 use serde::{Deserialize, Serialize};
 
 pub trait MapDocument {

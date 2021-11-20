@@ -1,9 +1,9 @@
-use bson::Document;
 use futures::StreamExt;
+use mongodb::bson::Document;
 use mongodb::error::Error;
 
 pub(crate) async fn read_mongodb_cursor(
-    blocked_res: Result<mongodb::Cursor, Error>,
+    blocked_res: Result<mongodb::Cursor<Document>, Error>,
 ) -> Vec<Document> {
     let mut documents: Vec<Document> = Vec::new();
     let result_documents = match blocked_res {

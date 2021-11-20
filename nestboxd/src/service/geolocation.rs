@@ -1,5 +1,7 @@
-use bson::doc;
-use chrono::{Duration, Utc};
+use mongodb::bson::DateTime;
+use mongodb::bson::{doc, Document};
+//use chrono::{Duration, Utc};
+use std::time::{Duration, SystemTime};
 use uuid::Uuid;
 
 use super::service_helper::InsertResult;
@@ -10,7 +12,7 @@ const GEOLOCATIONS: &str = "geolocations";
 
 #[derive(Clone)]
 pub struct GeolocationService {
-    collection: Collection,
+    collection: Collection<Document>,
 }
 
 impl GeolocationService {
@@ -22,7 +24,7 @@ impl GeolocationService {
 
     pub async fn post_geolocation(&self, nestbox_uuid: &str, long: f32, lat: f32) -> InsertResult {
         // End current location before entering a new one.
-        let now = Utc::now();
+        let now = DateTime::now();
         match self
             .collection
             .update_many(
@@ -41,7 +43,7 @@ impl GeolocationService {
             .insert_one(
                 doc! { "uuid" : Uuid::new_v4().to_string(),
                 "nestbox_uuid" : nestbox_uuid, "from_date" : &now,
-                "until_date" : Utc::now() + Duration::days(365000),
+                "until_date" : DateTime::from( SystemTime::now() + Duration::new(31536000000, 0)),
                 "position" : { "type" : "point", "coordinates" : [ &long, &lat ] } },
                 None,
             )

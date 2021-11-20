@@ -1,7 +1,7 @@
 use crate::controller::utilities::SessionObject;
 
-use bson::{doc, Document};
-use chrono::Utc;
+use mongodb::bson::{doc, DateTime, Document};
+//use chrono::Utc;
 use mongodb::{Collection, Database};
 use uuid::Uuid;
 
@@ -9,7 +9,7 @@ const SESSIONS: &str = "sessions";
 
 #[derive(Clone)]
 pub struct SessionService {
-    collection: Collection,
+    collection: Collection<Document>,
 }
 
 impl SessionService {
@@ -26,7 +26,7 @@ impl SessionService {
         let mut session_obj = user_obj;
         session_obj.remove("_id");
         session_obj.insert("session_key", &session_id);
-        session_obj.insert("session_created_at", Utc::now());
+        session_obj.insert("session_created_at", DateTime::now());
         self.remove_session(&session_obj).await;
         let _session = self.collection.insert_one(session_obj, None).await;
         session_id

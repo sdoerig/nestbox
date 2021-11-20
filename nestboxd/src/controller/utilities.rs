@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use bson::Document;
+use mongodb::bson::Document;
 use mongodb::error::Error;
 use serde::Deserialize;
 

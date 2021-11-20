@@ -1,11 +1,11 @@
 use super::service_helper as sa;
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
-use bson::{doc, Document};
+use mongodb::bson::{doc, Document};
 use mongodb::{error::Error, Collection, Database};
 
 #[derive(Clone)]
 pub struct NestboxService {
-    collection: Collection,
+    collection: Collection<Document>,
 }
 const NESTBOX: &str = "nestboxes";
 

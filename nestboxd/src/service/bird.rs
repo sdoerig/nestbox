@@ -1,4 +1,4 @@
-use bson::doc;
+use mongodb::bson::{doc, Document};
 
 use super::service_helper as sa;
 use crate::controller::utilities::{DocumentResponse, PagingQuery, SessionObject};
@@ -8,7 +8,7 @@ const BIRDS: &str = "birds";
 
 #[derive(Clone)]
 pub struct BirdService {
-    collection: Collection,
+    collection: Collection<Document>,
 }
 
 impl BirdService {
@@ -43,13 +43,13 @@ impl BirdService {
             Err(_e) => 0,
         };
 
-        DocumentResponse::new(documents, counted_documents, paging)
+        DocumentResponse::new(documents, counted_documents as i64, paging)
     }
 
     pub async fn get_by_mandant_uuid_count(
         &self,
         session_obj: &SessionObject,
-    ) -> Result<i64, Error> {
+    ) -> Result<u64, Error> {
         self.collection
             .count_documents(doc! {"mandant_uuid": session_obj.get_mandant_uuid()}, None)
             .await
