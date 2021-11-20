@@ -22,7 +22,7 @@ impl BirdService {
         &self,
         session_obj: &SessionObject,
         paging: &PagingQuery,
-    ) -> DocumentResponse {
+    ) -> (Vec<Document>, i64) {
         let res = self
             .collection
             .aggregate(
@@ -43,7 +43,7 @@ impl BirdService {
             Err(_e) => 0,
         };
 
-        DocumentResponse::new(documents, counted_documents as i64, paging)
+        (documents, counted_documents as i64)
     }
 
     pub async fn get_by_mandant_uuid_count(

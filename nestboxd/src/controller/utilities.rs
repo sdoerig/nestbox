@@ -99,16 +99,16 @@ impl SessionObject {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct DocumentResponse {
-    pub documents: Vec<Document>,
+pub struct DocumentResponse<P> {
+    pub documents: Vec<P>,
     pub counted_documents: i64,
     pub pages: i64,
     pub page_number: i64,
     pub page_limit: i64,
 }
 
-impl DocumentResponse {
-    pub fn new(documents: Vec<Document>, counted_documents: i64, paging: &PagingQuery) -> Self {
+impl<P> DocumentResponse<P> {
+    pub fn new(documents: Vec<P>, counted_documents: i64, paging: &PagingQuery) -> Self {
         let pages = if counted_documents % paging.page_limit > 0 {
             counted_documents / paging.page_limit + 1
         } else {

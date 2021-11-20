@@ -1,3 +1,5 @@
+use std::iter::Map;
+
 use mongodb::bson::Document;
 use serde::{Deserialize, Serialize};
 
@@ -95,6 +97,36 @@ impl MapDocument for LoginResponse {
             username,
             success,
             session,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct BirdResponse {
+    //"uuid":"decd3296-0d22-427a-b92c-51c0ac2ae23a","bird":"bird_0"
+    pub uuid: String,
+    pub bird: String,
+    pub bird_website: String,
+}
+
+impl MapDocument for BirdResponse {
+    fn map_doc(doc: &Document) -> Self {
+        let mut uuid = String::new();
+        let mut bird = String::new();
+        let mut bird_website = String::new();
+        if let Some(b) = doc.get("uuid") {
+            uuid = b.to_string().replace('"', "");
+        }
+        if let Some(b) = doc.get("bird") {
+            bird = b.to_string().replace('"', "")
+        }
+        if let Some(b) = doc.get("bird_website") {
+            bird_website = b.to_string().replace('"', "");
+        }
+        BirdResponse {
+            uuid,
+            bird,
+            bird_website,
         }
     }
 }

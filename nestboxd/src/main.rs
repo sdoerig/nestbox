@@ -78,7 +78,7 @@ async fn main() -> std::io::Result<()> {
 mod tests {
     use crate::controller::{
         req_structs::LoginReq,
-        res_structs::{LoginResponse, NestboxResponse},
+        res_structs::{BirdResponse, LoginResponse, NestboxResponse},
         utilities::DocumentResponse,
         validator::is_uuid,
     };
@@ -86,6 +86,7 @@ mod tests {
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
+    use mongodb::bson::Document;
 
     enum EndPoints {
         Birds,
@@ -160,7 +161,8 @@ mod tests {
         let uri = "/birds?page_limit=100&page_number=1";
         let svr_resp = build_paging_get_app(EndPoints::Birds, uri, &login_response.session).await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
-        let mut paging_response: DocumentResponse = test::read_body_json(svr_resp).await;
+        let mut paging_response: DocumentResponse<BirdResponse> =
+            test::read_body_json(svr_resp).await;
         let total_documents = paging_response.counted_documents;
         let mut count_documents: i64 = 0;
         while !paging_response.documents.is_empty() {

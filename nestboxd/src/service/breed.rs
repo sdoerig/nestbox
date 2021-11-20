@@ -29,7 +29,7 @@ impl BreedService {
         session_obj: &SessionObject,
         req: &NestboxReq,
         paging: &PagingQuery,
-    ) -> DocumentResponse {
+    ) -> DocumentResponse<Document> {
         let mut projection =
             doc! {"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0, "bird_uuid": 0}};
         if session_obj.is_valid_session() {
