@@ -346,36 +346,59 @@ If the user is not authenticated the response is without user_uuid.
 {
    "documents":[
       {
-         "uuid":"7ff60c06-c993-4755-8a37-65cabfae9f2a",
-         "nestbox_uuid":"9915a1ef-edaa-4268-b86c-7e43fe0bbd6b",
-         "discovery_date":{
-            "$date":"2021-06-01T18:36:38.988Z"
-         },
-         "bird":[
-            {
-               "uuid":"c94d90a0-42d5-4473-a0c6-aea758ba3356",
-               "bird":"bird_134"
-            }
-         ]
+         "uuid":"0b5cec76-02ac-4c6e-933e-62ebfae3e337",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-06-01 18:36:38.989 UTC",
+         "bird_uuid":"ebe661d6-77ba-4bd1-bae3-9e4e7eb880a6",
+         "bird":"bird_17"
       },
       {
-         "uuid":"3e339888-07e3-413c-a13f-3319454b07d6",
-         "nestbox_uuid":"9915a1ef-edaa-4268-b86c-7e43fe0bbd6b",
-         "discovery_date":{
-            "$date":"2021-06-01T18:36:38.988Z"
-         },
-         "bird":[
-            {
-               "uuid":"9a163a38-225c-4ee1-9a2a-72e1d49fec94",
-               "bird":"bird_82"
-            }
-         ]
+         "uuid":"320d1b78-3e30-4741-aff2-ce8180dd09fb",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-06-01 18:36:38.989 UTC",
+         "bird_uuid":"afc7ffcf-92aa-4e2a-9c41-92eb300d0281",
+         "bird":"bird_76"
+      },
+      {
+         "uuid":"aae7236e-74fb-40cb-8502-111ac4f2d984",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-06-01 18:36:38.989 UTC",
+         "bird_uuid":"60e4a52c-cd81-44fc-90bc-b2b578caae08",
+         "bird":"bird_108"
+      },
+      {
+         "uuid":"a075415f-8995-46f1-ac00-52a9efb60b2c",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-06-01 18:36:38.989 UTC",
+         "bird_uuid":"1c311c0f-5f4a-4beb-9483-2ee2ebcb4b22",
+         "bird":"bird_136"
+      },
+      {
+         "uuid":"dac29b8f-9668-4125-bf7b-e6ffe89d8241",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-06-01 18:36:38.989 UTC",
+         "bird_uuid":"f20807fe-f1d5-4b16-81b7-3cfbc89dd47f",
+         "bird":"bird_132"
+      },
+      {
+         "uuid":"75519762-dc75-4f1b-a4c3-0c57dc0a5e2f",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-06-01 18:36:38.989 UTC",
+         "bird_uuid":"7f15d908-c1c5-4206-ab2f-7971475b3a86",
+         "bird":"bird_119"
+      },
+      {
+         "uuid":"aa5d4e47-eb89-4605-865b-71e6852d1cc4",
+         "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+         "discovery_date":"2021-11-21 16:06:50.394 UTC",
+         "bird_uuid":"a4152a25-b734-4748-8a43-2401ed387c65",
+         "bird":"bird_40"
       }
    ],
-   "counted_documents":6,
-   "pages":3,
+   "counted_documents":7,
+   "pages":1,
    "page_number":1,
-   "page_limit":2
+   "page_limit":10
 }
 ```
 
