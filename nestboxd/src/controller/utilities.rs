@@ -8,6 +8,7 @@ use serde::Serialize;
 use super::error_message::UNAUTHORIZED;
 use super::error_message::{create_error_message, NESTBOX_OF_OTHER_MANDANT};
 use super::req_structs::NestboxReq;
+use super::validator::is_uuid;
 
 const MAX_PAGE_LIMIT: i64 = 100;
 const HTTP_AUTHORIZATION: &str = "Authorization";
@@ -129,7 +130,12 @@ pub fn parse_auth_header(http_req: &HttpRequest) -> String {
         Some(t) => t.to_str(),
         None => Ok("n.a."),
     };
-    session_token.unwrap().replace("Basic ", "")
+    let session_str = session_token.unwrap().replace("Basic ", "");
+    if is_uuid(&session_str) {
+        session_str
+    } else {
+        String::from("00000000-0000-0000-0000-00000000")
+    }
 }
 
 pub async fn nestbox_req_is_authorized(

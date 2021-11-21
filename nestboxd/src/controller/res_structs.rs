@@ -130,3 +130,58 @@ impl MapDocument for BirdResponse {
         }
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct BreedResponse {
+    //{"uuid":"0b5cec76-02ac-4c6e-933e-62ebfae3e337",
+    // "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
+    // "discovery_date":{"$date":{"$numberLong":"1622572598989"}},
+    // "bird":[{"uuid":"ebe661d6-77ba-4bd1-bae3-9e4e7eb880a6","bird":"bird_17"}]}
+    pub uuid: String,
+    pub nestbox_uuid: String,
+    pub discovery_date: String,
+    pub bird_uuid: String,
+    pub bird: String,
+}
+
+impl MapDocument for BreedResponse {
+    fn map_doc(doc: &Document) -> Self {
+        let mut uuid = String::from("");
+        let mut nestbox_uuid = String::from("");
+        let mut discovery_date = String::from("");
+        let mut bird_uuid = String::from("");
+        let mut bird = String::from("");
+
+        if let Some(b) = doc.get("uuid") {
+            uuid = b.to_string().replace('"', "");
+        }
+        if let Some(b) = doc.get("nestbox_uuid") {
+            nestbox_uuid = b.to_string().replace('"', "");
+        }
+        if let Some(b) = doc.get("discovery_date") {
+            if let Some(dt) = b.as_datetime() {
+                discovery_date = dt.to_string();
+            }
+        }
+        if let Ok(b) = doc.get_array("bird") {
+            if let Some(t) = b.get(0) {
+                if let Some(d) = t.as_document() {
+                    if let Some(bson_bird_uuid) = d.get("uuid") {
+                        bird_uuid = bson_bird_uuid.to_string().replace('"', "");
+                    }
+                    if let Some(bson_bird) = d.get("bird") {
+                        bird = bson_bird.to_string().replace('"', "");
+                    }
+                }
+            }
+        }
+
+        BreedResponse {
+            uuid,
+            nestbox_uuid,
+            discovery_date,
+            bird_uuid,
+            bird,
+        }
+    }
+}

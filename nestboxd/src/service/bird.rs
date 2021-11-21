@@ -28,6 +28,7 @@ impl BirdService {
             .aggregate(
                 vec![
                     doc! {"$match": {"mandant_uuid": {"$eq": session_obj.get_mandant_uuid()}}},
+                    doc! { "$sort" : { "bird" : 1} },
                     doc! {"$skip": (paging.page_limit * (paging.page_number -1))},
                     doc! {"$limit": paging.page_limit},
                     doc! {"$project": {"_id": 0, "mandant_uuid": 0}},

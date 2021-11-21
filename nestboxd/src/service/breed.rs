@@ -29,7 +29,7 @@ impl BreedService {
         session_obj: &SessionObject,
         req: &NestboxReq,
         paging: &PagingQuery,
-    ) -> DocumentResponse<Document> {
+    ) -> (Vec<Document>, i64) {
         let mut projection =
             doc! {"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0, "bird_uuid": 0}};
         if session_obj.is_valid_session() {
@@ -75,7 +75,7 @@ impl BreedService {
             Err(_e) => 0,
         };
 
-        DocumentResponse::new(documents, counted_documents as i64, paging)
+        (documents, counted_documents as i64)
     }
 
     pub async fn get_by_nestbox_count(&self, nestbox_uuid: &str) -> Result<u64, Error> {
@@ -123,7 +123,7 @@ mod tests {
         let nestbox_req = NestboxReq {
             uuid: String::from(NESTBOX_UUID_OK),
         };
-        let breeds_response = breeds_service
+        let (documents, counted_documents) = breeds_service
             .get_by_nestbox_uuid(
                 &session,
                 &nestbox_req,
@@ -133,10 +133,7 @@ mod tests {
                 },
             )
             .await;
-        assert_eq!(breeds_response.counted_documents, 6_i64);
-        assert_eq!(breeds_response.page_number, 1_i64);
-        assert_eq!(breeds_response.pages, 3_i64);
-        assert_eq!(breeds_response.page_limit, 2_i64);
+        assert_eq!(counted_documents, 6_i64);
     }
 
     async fn fetch_db() -> Database {
