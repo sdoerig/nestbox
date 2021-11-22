@@ -1,4 +1,4 @@
-use std::iter::Map;
+use std::{fmt::Pointer, iter::Map};
 
 use mongodb::bson::Document;
 use serde::{Deserialize, Serialize};
@@ -140,6 +140,7 @@ pub struct BreedResponse {
     pub uuid: String,
     pub nestbox_uuid: String,
     pub discovery_date: String,
+    pub user_uuid: String,
     pub bird_uuid: String,
     pub bird: String,
 }
@@ -149,6 +150,7 @@ impl MapDocument for BreedResponse {
         let mut uuid = String::from("");
         let mut nestbox_uuid = String::from("");
         let mut discovery_date = String::from("");
+        let mut user_uuid = String::from("");
         let mut bird_uuid = String::from("");
         let mut bird = String::from("");
 
@@ -157,6 +159,9 @@ impl MapDocument for BreedResponse {
         }
         if let Some(b) = doc.get("nestbox_uuid") {
             nestbox_uuid = b.to_string().replace('"', "");
+        }
+        if let Some(b) = doc.get("user_uuid") {
+            user_uuid = b.to_string().replace('"', "");
         }
         if let Some(b) = doc.get("discovery_date") {
             if let Some(dt) = b.as_datetime() {
@@ -180,6 +185,7 @@ impl MapDocument for BreedResponse {
             uuid,
             nestbox_uuid,
             discovery_date,
+            user_uuid,
             bird_uuid,
             bird,
         }
