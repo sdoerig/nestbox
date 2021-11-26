@@ -16,7 +16,6 @@ use uuid::Uuid;
 mod collector;
 use collector::{Collector, CollectorState};
 
-
 const COL_NESTBOXES: &str = "nestboxes";
 const COL_MANDANTS: &str = "mandants";
 const COL_BREEDS: &str = "breeds";
@@ -24,7 +23,12 @@ const COL_USERS: &str = "users";
 const COL_GEOLOCATIONS: &str = "geolocations";
 const COL_BIRDS: &str = "birds";
 
-pub fn populate_db(db_uri: &str, db_name: &str, records_to_insert: i32) -> mongodb::error::Result<()> {
+pub fn populate_db(
+    db_uri: &str,
+    db_name: &str,
+    records_to_insert: i32,
+    password_secret: &str,
+) -> mongodb::error::Result<()> {
     let client = Client::with_uri_str(db_uri)?;
 
     let database = client.database(db_name);
@@ -43,7 +47,7 @@ pub fn populate_db(db_uri: &str, db_name: &str, records_to_insert: i32) -> mongo
     let mut mandant_uuid = mandant_collector.uuids.get(0).unwrap().clone();
     gen_birds_for_mandant(&mut birds_collector, &mandant_uuid);
     for i in 0..records_to_insert as usize {
-        let (user_password_salt, password_hash) = get_password_and_salt();
+        let (user_password_salt, password_hash) = get_password_and_salt(password_secret);
         users_collector.append_doc(doc! {
         "mandant_uuid": &mandant_uuid,
         "username": format!("fg_{}", i),
@@ -101,12 +105,13 @@ fn gen_birds_for_mandant(birds_collector: &mut Collector, mandant_uuid: &str) {
     birds_collector.flush();
 }
 
-fn get_password_and_salt() -> (Uuid, String) {
+fn get_password_and_salt(password_secret: &str) -> (Uuid, String) {
     let user_password_salt = Uuid::new_v4();
     let mut hasher = Sha3_256::new();
-    let password_with_salt = format!("{}_{}", "secretbird", user_password_salt.to_string());
+    let password_with_salt = format!("{}_{}_{}", "secretbird", user_password_salt.to_string(), password_secret);
     hasher.update(password_with_salt);
     let password_hash = hex::encode(hasher.finalize());
+
     (user_password_salt, password_hash)
 }
 
@@ -169,6 +174,7 @@ mod tests {
     const INSERTED_RECORDS: usize = 12;
     const DB_URI: &str = "mongodb://127.0.0.1:27017/?w=majority";
     const DATABASE: &str = "nestbox_bouncycastle";
+    const PASSWORD_SECRET: &str = "my_Super_H05T_5Cr3t";
     // Note: any case below tests only if the number of records in the db
     // are greater after the test then before. So the test only asserts
     // that an insertion has been done.
@@ -208,7 +214,7 @@ mod tests {
         let database = client.database(DATABASE);
         let mandants_collection = database.collection(collection);
         let mandants_res_before_test = mandants_collection.count_documents(doc! {}, None);
-        let _result = populate_db(DB_URI, DATABASE, INSERTED_RECORDS as i32);
+        let _result = populate_db(DB_URI, DATABASE, INSERTED_RECORDS as i32, PASSWORD_SECRET);
         let mandants_res = mandants_collection.count_documents(doc! {}, None);
         assert_eq!(
             mandants_res.unwrap() > mandants_res_before_test.unwrap(),

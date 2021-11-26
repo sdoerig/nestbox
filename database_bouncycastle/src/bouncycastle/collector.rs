@@ -35,7 +35,7 @@ impl Collector {
         let opt_uuid = doc.get("uuid");
         let uuid = match opt_uuid {
             Some(u) => u.to_string(),
-            None => String::from("")
+            None => String::from(""),
         };
 
         if !uuid.is_empty() {

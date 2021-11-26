@@ -10,7 +10,7 @@ fn print_usage(program: &str, opts: &Options) {
     print!("{}", opts.usage(&brief));
 }
 
-pub fn extract_argv() -> (String, String, i32) {
+pub fn extract_argv() -> (String, String, i32, String) {
     let args: Vec<String> = env::args().collect();
     let program = args[0].clone();
     let mut opts = Options::new();
@@ -26,12 +26,8 @@ pub fn extract_argv() -> (String, String, i32) {
         "dateabase name e.g. nestbox_bouncycastle",
         "MONGO_DB_HOST",
     );
-    opts.optopt(
-        "n",
-        "number of records to insert",
-        "The number of records to insert",
-        "NUMBER",
-    );
+    opts.optopt("r", "records", "The number of records to insert", "NUMBER");
+    opts.optopt("s", "password_secret", "Host password secret.", "NUMBER");
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => m,
         Err(_f) => {
@@ -53,7 +49,14 @@ pub fn extract_argv() -> (String, String, i32) {
             process::exit(3)
         }
     };
-    let record_str = match matches.opt_str("n") {
+    let record_str = match matches.opt_str("r") {
+        Some(m) => m,
+        None => {
+            print_usage(&program, &opts);
+            process::exit(3)
+        }
+    };
+    let password_secret_str = match matches.opt_str("s") {
         Some(m) => m,
         None => {
             print_usage(&program, &opts);
@@ -67,5 +70,5 @@ pub fn extract_argv() -> (String, String, i32) {
             process::exit(3)
         }
     };
-    (db_host, db_name, record_int)
+    (db_host, db_name, record_int, password_secret_str)
 }
