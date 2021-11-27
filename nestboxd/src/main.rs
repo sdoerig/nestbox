@@ -78,7 +78,7 @@ async fn main() -> std::io::Result<()> {
 mod tests {
     use crate::controller::{
         req_structs::LoginReq,
-        res_structs::{BirdResponse, LoginResponse, NestboxResponse},
+        res_structs::{BirdResponse, BreedResponse, LoginResponse, NestboxResponse},
         utilities::DocumentResponse,
         validator::is_uuid,
     };
@@ -88,20 +88,31 @@ mod tests {
     use actix_web::{http::StatusCode, test, App};
     use mongodb::bson::Document;
 
-    enum EndPoints {
-        Birds,
-        Geolocations,
-        Breeds,
+    enum HttpMethod {
+        POST,
+        GET,
     }
+
+    enum EndPoints {
+        Birds(HttpMethod),
+        Geolocations(HttpMethod),
+        Breeds(HttpMethod),
+    }
+
+    const NESTBOX_EXISTING: &str = "9ede3c8c-f552-4f74-bb8c-0b574be9895c";
+    const NESTBOX_NOT_EXISTING: &str = "9ede3c8c-eeee-ffff-aaaa-0b574be9895c";
+    const USER: &str = "fg_199";
+    const PASSWORD_CORRECT: &str = "secretbird";
+    const PASSWORD_WRONG: &str = "wrongbird";
 
     #[actix_rt::test]
     async fn test_200_login_post_ok() {
         let uri = "/login";
-        // {"username":"fg_199","password":"secretbird"}
-        let user_name = String::from("fg_199");
+        // {"username":USER,"password":PASSWORD_CORRECT}
+        let user_name = String::from(USER);
         let user_data = LoginReq {
             username: user_name.clone(),
-            password: String::from("secretbird"),
+            password: String::from(PASSWORD_CORRECT),
         };
         let svr_resp = build_login_post_app(uri, &user_data).await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
@@ -114,11 +125,11 @@ mod tests {
     #[actix_rt::test]
     async fn test_401_login_post_nok() {
         let uri = "/login";
-        // {"username":"fg_199","password":"secretbird"}
-        let user_name = String::from("fg_199");
+        // {"username":USER,"password":PASSWORD_CORRECT}
+        let user_name = String::from(USER);
         let user_data = LoginReq {
             username: user_name.clone(),
-            password: String::from("wronpass"),
+            password: String::from(PASSWORD_WRONG),
         };
         let svr_resp = build_login_post_app(uri, &user_data).await;
         assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
@@ -126,40 +137,45 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_200_nestbox_get() {
-        let uri = "/nestboxes/9ede3c8c-f552-4f74-bb8c-0b574be9895c";
-        let svr_resp = build_nest_box_app(uri).await;
+        let uri = format!("/nestboxes/{}", NESTBOX_EXISTING);
+        let svr_resp = build_nest_box_app(&uri).await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
         let response: NestboxResponse = test::read_body_json(svr_resp).await;
-        assert!(response.uuid == String::from("9ede3c8c-f552-4f74-bb8c-0b574be9895c"));
+        assert!(response.uuid == String::from(NESTBOX_EXISTING));
     }
 
     #[actix_rt::test]
     async fn test_404_nestbox_get() {
-        let uri = "/nestboxes/9ede3c8c-eeee-ffff-aaaa-0b574be9895c";
-        let svr_resp = build_nest_box_app(uri).await;
+        let uri = format!("/nestboxes/{}", NESTBOX_NOT_EXISTING);
+        let svr_resp = build_nest_box_app(&uri).await;
         assert_eq!(svr_resp.status(), StatusCode::NOT_FOUND);
     }
 
     #[actix_rt::test]
     async fn test_401_birds_get() {
         let uri = "/birds?page_limit=100&page_number=1";
-        let svr_resp = build_paging_get_app(EndPoints::Birds, uri, "").await;
+        let svr_resp = build_paging_get_app(EndPoints::Birds(HttpMethod::GET), uri, "").await;
         assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[actix_rt::test]
     async fn test_200_bird_get_ok() {
         let uri = "/login";
-        // {"username":"fg_199","password":"secretbird"}
+        // {"username":USER,"password":PASSWORD_CORRECT}
         let user_name = String::from("fg_200");
         let user_data = LoginReq {
             username: user_name.clone(),
-            password: String::from("secretbird"),
+            password: String::from(PASSWORD_CORRECT),
         };
         let svr_login_resp = build_login_post_app(uri, &user_data).await;
         let login_response: LoginResponse = test::read_body_json(svr_login_resp).await;
         let uri = "/birds?page_limit=100&page_number=1";
-        let svr_resp = build_paging_get_app(EndPoints::Birds, uri, &login_response.session).await;
+        let svr_resp = build_paging_get_app(
+            EndPoints::Birds(HttpMethod::GET),
+            uri,
+            &login_response.session,
+        )
+        .await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
         let mut paging_response: DocumentResponse<BirdResponse> =
             test::read_body_json(svr_resp).await;
@@ -171,8 +187,37 @@ mod tests {
                 "/birds?page_limit=100&page_number={}",
                 paging_response.page_number + 1
             );
-            let svr_resp =
-                build_paging_get_app(EndPoints::Birds, &uri, &login_response.session).await;
+            let svr_resp = build_paging_get_app(
+                EndPoints::Birds(HttpMethod::GET),
+                &uri,
+                &login_response.session,
+            )
+            .await;
+            paging_response = test::read_body_json(svr_resp).await;
+        }
+        assert!(total_documents == count_documents);
+    }
+
+    #[actix_rt::test]
+    async fn test_200_breed_get_ok() {
+        let uri = format!(
+            "/nestboxes/{}/breeds?page_limit=3&page_number=1",
+            NESTBOX_EXISTING
+        );
+        let svr_resp = build_paging_get_app(EndPoints::Breeds(HttpMethod::GET), &uri, "").await;
+        assert_eq!(svr_resp.status(), StatusCode::OK);
+        let mut paging_response: DocumentResponse<BreedResponse> =
+            test::read_body_json(svr_resp).await;
+        let total_documents = paging_response.counted_documents;
+        let mut count_documents: i64 = 0;
+        while !paging_response.documents.is_empty() {
+            count_documents += paging_response.documents.len() as i64;
+            let uri = format!(
+                "/nestboxes/{}/breeds?page_limit=3&page_number={}",
+                NESTBOX_EXISTING,
+                paging_response.page_number + 1
+            );
+            let svr_resp = build_paging_get_app(EndPoints::Breeds(HttpMethod::GET), &uri, "").await;
             paging_response = test::read_body_json(svr_resp).await;
         }
         assert!(total_documents == count_documents);
@@ -183,8 +228,9 @@ mod tests {
         uri: &str,
         sessiontoken: &str,
     ) -> actix_web::dev::ServiceResponse {
+        let mut http_method = HttpMethod::GET;
         let mut app = match endpoint {
-            EndPoints::Birds => {
+            EndPoints::Birds(m) => {
                 test::init_service(
                     App::new()
                         .data(AppState {
@@ -197,7 +243,7 @@ mod tests {
                 )
                 .await
             }
-            EndPoints::Geolocations => {
+            EndPoints::Geolocations(m) => {
                 test::init_service(
                     App::new()
                         .data(AppState {
@@ -210,27 +256,54 @@ mod tests {
                 )
                 .await
             }
-            EndPoints::Breeds => {
-                test::init_service(
-                    App::new()
-                        .data(AppState {
-                            service_container: ServiceContainer::new(
-                                get_db().await,
-                                String::from("/tmp/"),
-                            ),
-                        })
-                        .service(controller::bird::birds_get),
-                )
-                .await
-            }
+            EndPoints::Breeds(m) => match m {
+                HttpMethod::POST => {
+                    http_method = HttpMethod::POST;
+                    test::init_service(
+                        App::new()
+                            .data(AppState {
+                                service_container: ServiceContainer::new(
+                                    get_db().await,
+                                    String::from("/tmp/"),
+                                ),
+                            })
+                            .service(controller::breed::breeds_post),
+                    )
+                    .await
+                }
+                HttpMethod::GET => {
+                    test::init_service(
+                        App::new()
+                            .data(AppState {
+                                service_container: ServiceContainer::new(
+                                    get_db().await,
+                                    String::from("/tmp/"),
+                                ),
+                            })
+                            .service(controller::breed::breeds_get),
+                    )
+                    .await
+                }
+            },
         };
 
         if is_uuid(sessiontoken) {
-            test::TestRequest::get()
-                .uri(uri)
-                .header("Authorization", format!("Basic {}", sessiontoken))
-                .send_request(&mut app)
-                .await
+            match http_method {
+                HttpMethod::POST => {
+                    test::TestRequest::get()
+                        .uri(uri)
+                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .send_request(&mut app)
+                        .await
+                }
+                HttpMethod::GET => {
+                    test::TestRequest::get()
+                        .uri(uri)
+                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .send_request(&mut app)
+                        .await
+                }
+            }
         } else {
             test::TestRequest::get()
                 .uri(uri)
