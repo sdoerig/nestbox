@@ -99,6 +99,7 @@ mod tests {
         Geolocations(HttpMethod),
         Breeds(HttpMethod),
         Login(HttpMethod),
+        Nestboxes(HttpMethod),
     }
 
     enum RequestData {
@@ -111,6 +112,7 @@ mod tests {
     const USER: &str = "fg_199";
     const PASSWORD_CORRECT: &str = "secretbird";
     const PASSWORD_WRONG: &str = "wrongbird";
+    const IMAGE_DIRECTORY: &str = "/tmp/";
 
     #[actix_rt::test]
     async fn test_200_login_post_ok() {
@@ -157,7 +159,13 @@ mod tests {
     #[actix_rt::test]
     async fn test_200_nestbox_get() {
         let uri = format!("/nestboxes/{}", NESTBOX_EXISTING);
-        let svr_resp = build_nest_box_app(&uri).await;
+        let svr_resp = build_app(
+            EndPoints::Nestboxes(HttpMethod::GET),
+            &uri,
+            "",
+            RequestData::Empty,
+        )
+        .await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
         let response: NestboxResponse = test::read_body_json(svr_resp).await;
         assert!(response.uuid == String::from(NESTBOX_EXISTING));
@@ -166,7 +174,13 @@ mod tests {
     #[actix_rt::test]
     async fn test_404_nestbox_get() {
         let uri = format!("/nestboxes/{}", NESTBOX_NOT_EXISTING);
-        let svr_resp = build_nest_box_app(&uri).await;
+        let svr_resp = build_app(
+            EndPoints::Nestboxes(HttpMethod::GET),
+            &uri,
+            "",
+            RequestData::Empty,
+        )
+        .await;
         assert_eq!(svr_resp.status(), StatusCode::NOT_FOUND);
     }
 
@@ -283,7 +297,7 @@ mod tests {
                         .data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
-                                String::from("/tmp/"),
+                                String::from(IMAGE_DIRECTORY),
                             ),
                         })
                         .service(controller::bird::birds_get),
@@ -297,7 +311,7 @@ mod tests {
                         .data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
-                                String::from("/tmp/"),
+                                String::from(IMAGE_DIRECTORY),
                             ),
                         })
                         .service(controller::bird::birds_get),
@@ -312,7 +326,7 @@ mod tests {
                             .data(AppState {
                                 service_container: ServiceContainer::new(
                                     get_db().await,
-                                    String::from("/tmp/"),
+                                    String::from(IMAGE_DIRECTORY),
                                 ),
                             })
                             .service(controller::breed::breeds_post),
@@ -326,7 +340,7 @@ mod tests {
                             .data(AppState {
                                 service_container: ServiceContainer::new(
                                     get_db().await,
-                                    String::from("/tmp/"),
+                                    String::from(IMAGE_DIRECTORY),
                                 ),
                             })
                             .service(controller::breed::breeds_get),
@@ -335,16 +349,31 @@ mod tests {
                 }
             },
             EndPoints::Login(m) => {
+                // Caution POST only implemented.
                 http_method = m.clone();
                 test::init_service(
                     App::new()
                         .data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
-                                String::from("/tmp/"),
+                                String::from(IMAGE_DIRECTORY),
                             ),
                         })
                         .service(controller::user::login_post),
+                )
+                .await
+            }
+            EndPoints::Nestboxes(_) => {
+                // Caution GET only implemented.
+                test::init_service(
+                    App::new()
+                        .data(AppState {
+                            service_container: ServiceContainer::new(
+                                get_db().await,
+                                String::from(IMAGE_DIRECTORY),
+                            ),
+                        })
+                        .service(controller::nestbox::nestboxes_get),
                 )
                 .await
             }
@@ -379,24 +408,6 @@ mod tests {
             }
         }
     }
-
-    async fn build_nest_box_app(uri: &str) -> actix_web::dev::ServiceResponse {
-        let mut app = test::init_service(
-            App::new()
-                .data(AppState {
-                    service_container: ServiceContainer::new(get_db().await, String::from("/tmp/")),
-                })
-                .service(controller::nestbox::nestboxes_get),
-        )
-        .await;
-        let svr_resp = test::TestRequest::get()
-            .uri(uri)
-            .send_request(&mut app)
-            .await;
-        svr_resp
-    }
-
-   
 
     async fn get_db() -> Database {
         let client_options_future = ClientOptions::parse("mongodb://localhost:27017");
