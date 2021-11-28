@@ -13,13 +13,13 @@ impl Validator for NestboxReq {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct BirdReq {
     pub bird_uuid: String,
     pub bird: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub struct GeolocationReq {
     pub long: f32,
     pub lat: f32,

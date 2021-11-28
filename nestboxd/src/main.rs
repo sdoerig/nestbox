@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use crate::controller::{
-        req_structs::LoginReq,
+        req_structs::{BirdReq, LoginReq},
         res_structs::{BirdResponse, BreedResponse, LoginResponse, NestboxResponse},
         utilities::DocumentResponse,
         validator::is_uuid,
@@ -104,6 +104,7 @@ mod tests {
 
     enum RequestData {
         Login(LoginReq),
+        Bird(BirdReq),
         Empty,
     }
 
@@ -113,6 +114,9 @@ mod tests {
     const PASSWORD_CORRECT: &str = "secretbird";
     const PASSWORD_WRONG: &str = "wrongbird";
     const IMAGE_DIRECTORY: &str = "/tmp/";
+    const NESTBOX_MANDANT_1: &str = "45f149a2-b05a-4de8-a358-6e704eb6efca";
+    const BIRD_MANDANT_1: &str = "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2";
+    const MANDANT_1: &str = "5bcb187b-996a-4169-8f12-cc315c2b22f7";
 
     #[actix_rt::test]
     async fn test_200_login_post_ok() {
@@ -199,21 +203,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_200_bird_get_ok() {
-        let uri = "/login";
-        // {"username":USER,"password":PASSWORD_CORRECT}
-        let user_name = String::from("fg_200");
-        let user_data = LoginReq {
-            username: user_name.clone(),
-            password: String::from(PASSWORD_CORRECT),
-        };
-        let svr_login_resp = build_app(
-            EndPoints::Login(HttpMethod::POST),
-            uri,
-            "",
-            RequestData::Login(user_data),
-        )
-        .await;
-        let login_response: LoginResponse = test::read_body_json(svr_login_resp).await;
+        let login_response = login_ok().await;
         let uri = "/birds?page_limit=100&page_number=1";
         let svr_resp = build_app(
             EndPoints::Birds(HttpMethod::GET),
@@ -280,6 +270,51 @@ mod tests {
             paging_response = test::read_body_json(svr_resp).await;
         }
         assert!(total_documents == count_documents);
+    }
+
+    #[actix_rt::test]
+    async fn test_204_breeds_post_ok() {
+        // curl \
+        //    -H "Authorization: Basic b955d5ab-531d-45a5-b610-5b456fa509d9" \
+        //    --H "Content-Type: application/json" \
+        //    --request POST \
+        //    --data '{"bird_uuid": "a4152a25-b734-4748-8a43-2401ed387c65", "bird":"a"}' \
+        //    http://127.0.0.1:8080/nestboxes/9973e59f-771d-452f-9a1b-8b4a6d5c4f95/breeds
+        let uri = format!("/nestboxes/{}/breeds", NESTBOX_MANDANT_1);
+        let login_response = login_ok().await;
+        // nestbox 45f149a2-b05a-4de8-a358-6e704eb6efca
+        // bird "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2",
+        // "mandant_uuid" : "5bcb187b-996a-4169-8f12-cc315c2b22f7"
+        let bird_data: BirdReq = BirdReq {
+            bird: String::from("_"),
+            bird_uuid: String::from(BIRD_MANDANT_1),
+        };
+        let svr_resp = build_app(
+            EndPoints::Breeds(HttpMethod::POST),
+            &uri,
+            &login_response.session,
+            RequestData::Bird(bird_data),
+        )
+        .await;
+        assert_eq!(svr_resp.status(), StatusCode::CREATED);
+    }
+
+    async fn login_ok() -> LoginResponse {
+        let uri = "/login";
+        let user_name = String::from("fg_200");
+        let user_data = LoginReq {
+            username: user_name.clone(),
+            password: String::from(PASSWORD_CORRECT),
+        };
+        let svr_login_resp = build_app(
+            EndPoints::Login(HttpMethod::POST),
+            uri,
+            "",
+            RequestData::Login(user_data),
+        )
+        .await;
+        let login_response: LoginResponse = test::read_body_json(svr_login_resp).await;
+        login_response
     }
 
     async fn build_app(
@@ -390,6 +425,15 @@ mod tests {
                         .await
                 }
                 RequestData::Login(req) => {
+                    test::TestRequest::post()
+                        .uri(uri)
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .set_json(&req)
+                        .send_request(&mut app)
+                        .await
+                }
+                RequestData::Bird(req) => {
                     test::TestRequest::post()
                         .uri(uri)
                         .header("Content-Type", "application/json")
