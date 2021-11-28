@@ -1,5 +1,3 @@
-use std::{fmt::Pointer, iter::Map};
-
 use mongodb::bson::Document;
 use serde::{Deserialize, Serialize};
 
@@ -87,7 +85,7 @@ impl MapDocument for LoginResponse {
         if let Some(b) = doc.get("username") {
             username = b.to_string().replace('"', "");
         }
-        if let Some(b) = doc.get("success") {
+        if let Some(_b) = doc.get("success") {
             success = true;
         }
         if let Some(b) = doc.get("session") {

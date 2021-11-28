@@ -111,9 +111,11 @@ mod tests {
     const NESTBOX_EXISTING: &str = "9ede3c8c-f552-4f74-bb8c-0b574be9895c";
     const NESTBOX_NOT_EXISTING: &str = "9ede3c8c-eeee-ffff-aaaa-0b574be9895c";
     const USER: &str = "fg_199";
+    const USER_BIRDS_TEST: &str = "fg_198"; 
     const PASSWORD_CORRECT: &str = "secretbird";
     const PASSWORD_WRONG: &str = "wrongbird";
     const IMAGE_DIRECTORY: &str = "/tmp/";
+    const USER_MANDANT_1: &str = "fg_200";
     const NESTBOX_MANDANT_1: &str = "45f149a2-b05a-4de8-a358-6e704eb6efca";
     const BIRD_MANDANT_1: &str = "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2";
     const MANDANT_1: &str = "5bcb187b-996a-4169-8f12-cc315c2b22f7";
@@ -203,12 +205,12 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_200_bird_get_ok() {
-        let login_response = login_ok().await;
+        let login_response = login_ok(USER_BIRDS_TEST).await;
         let uri = "/birds?page_limit=100&page_number=1";
         let svr_resp = build_app(
             EndPoints::Birds(HttpMethod::GET),
             uri,
-            &login_response.session,
+            &(login_response.session),
             RequestData::Empty,
         )
         .await;
@@ -219,10 +221,7 @@ mod tests {
         let mut count_documents: i64 = 0;
         while !paging_response.documents.is_empty() {
             count_documents += paging_response.documents.len() as i64;
-            let uri = format!(
-                "/birds?page_limit=100&page_number={}",
-                paging_response.page_number + 1
-            );
+            let uri = format!("/birds?page_limit=100&page_number={}", paging_response.page_number + 1 );
             let svr_resp = build_app(
                 EndPoints::Birds(HttpMethod::GET),
                 &uri,
@@ -230,6 +229,7 @@ mod tests {
                 RequestData::Empty,
             )
             .await;
+            assert_eq!(svr_resp.status(), StatusCode::OK, "Failed at uri {}, token {}", uri, &login_response.session);
             paging_response = test::read_body_json(svr_resp).await;
         }
         assert!(total_documents == count_documents);
@@ -281,7 +281,7 @@ mod tests {
         //    --data '{"bird_uuid": "a4152a25-b734-4748-8a43-2401ed387c65", "bird":"a"}' \
         //    http://127.0.0.1:8080/nestboxes/9973e59f-771d-452f-9a1b-8b4a6d5c4f95/breeds
         let uri = format!("/nestboxes/{}/breeds", NESTBOX_MANDANT_1);
-        let login_response = login_ok().await;
+        let login_response = login_ok(USER_MANDANT_1).await;
         // nestbox 45f149a2-b05a-4de8-a358-6e704eb6efca
         // bird "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2",
         // "mandant_uuid" : "5bcb187b-996a-4169-8f12-cc315c2b22f7"
@@ -299,9 +299,9 @@ mod tests {
         assert_eq!(svr_resp.status(), StatusCode::CREATED);
     }
 
-    async fn login_ok() -> LoginResponse {
+    async fn login_ok(user: &str) -> LoginResponse {
         let uri = "/login";
-        let user_name = String::from("fg_200");
+        let user_name = String::from(user);
         let user_data = LoginReq {
             username: user_name.clone(),
             password: String::from(PASSWORD_CORRECT),
