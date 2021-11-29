@@ -3,10 +3,7 @@ use mongodb::bson::{doc, DateTime, Document};
 use uuid::Uuid;
 
 use super::service_helper as sa;
-use crate::controller::{
-    req_structs::BirdReq,
-    utilities::{DocumentResponse, PagingQuery},
-};
+use crate::controller::{req_structs::BirdReq, res_structs::BreedResponse, utilities::{DocumentResponse, PagingQuery}};
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use mongodb::{error::Error, Collection, Database};
 
@@ -89,14 +86,17 @@ impl BreedService {
         session_obj: &SessionObject,
         nestbox_req: &NestboxReq,
         bird: &BirdReq,
-    ) -> std::result::Result<mongodb::results::InsertOneResult, mongodb::error::Error> {
+    ) -> std::result::Result<mongodb::bson::Document, Error> {
         let breed = doc! {
         "uuid": Uuid::new_v4().to_string(),
         "nestbox_uuid": &nestbox_req.uuid,
         "user_uuid": session_obj.get_user_uuid(),
         "discovery_date": DateTime::now(),
         "bird_uuid": &bird.bird_uuid};
-        self.collection.insert_one(breed, None).await
+        match self.collection.insert_one(&breed, None).await {
+            Ok(o) => Ok(breed),
+            Err(e) => Err(e),
+        }
     }
 }
 

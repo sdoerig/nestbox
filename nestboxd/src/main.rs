@@ -111,7 +111,7 @@ mod tests {
     const NESTBOX_EXISTING: &str = "9ede3c8c-f552-4f74-bb8c-0b574be9895c";
     const NESTBOX_NOT_EXISTING: &str = "9ede3c8c-eeee-ffff-aaaa-0b574be9895c";
     const USER: &str = "fg_199";
-    const USER_BIRDS_TEST: &str = "fg_198"; 
+    const USER_BIRDS_TEST: &str = "fg_198";
     const PASSWORD_CORRECT: &str = "secretbird";
     const PASSWORD_WRONG: &str = "wrongbird";
     const IMAGE_DIRECTORY: &str = "/tmp/";
@@ -221,7 +221,10 @@ mod tests {
         let mut count_documents: i64 = 0;
         while !paging_response.documents.is_empty() {
             count_documents += paging_response.documents.len() as i64;
-            let uri = format!("/birds?page_limit=100&page_number={}", paging_response.page_number + 1 );
+            let uri = format!(
+                "/birds?page_limit=100&page_number={}",
+                paging_response.page_number + 1
+            );
             let svr_resp = build_app(
                 EndPoints::Birds(HttpMethod::GET),
                 &uri,
@@ -229,7 +232,13 @@ mod tests {
                 RequestData::Empty,
             )
             .await;
-            assert_eq!(svr_resp.status(), StatusCode::OK, "Failed at uri {}, token {}", uri, &login_response.session);
+            assert_eq!(
+                svr_resp.status(),
+                StatusCode::OK,
+                "Failed at uri {}, token {}",
+                uri,
+                &login_response.session
+            );
             paging_response = test::read_body_json(svr_resp).await;
         }
         assert!(total_documents == count_documents);
@@ -297,6 +306,14 @@ mod tests {
         )
         .await;
         assert_eq!(svr_resp.status(), StatusCode::CREATED);
+        let resp: BreedResponse = test::read_body_json(svr_resp).await;
+        assert!(is_uuid(&resp.uuid));
+        assert!(
+            resp.bird_uuid == BIRD_MANDANT_1,
+            "resp.bird_uuid {} expected {}",
+            resp.bird_uuid,
+            BIRD_MANDANT_1
+        );
     }
 
     async fn login_ok(user: &str) -> LoginResponse {
