@@ -115,6 +115,7 @@ mod tests {
     const PASSWORD_CORRECT: &str = "secretbird";
     const PASSWORD_WRONG: &str = "wrongbird";
     const IMAGE_DIRECTORY: &str = "/tmp/";
+    const USER_STRANGER: &str = "fg_1001";
     const USER_MANDANT_1: &str = "fg_200";
     const NESTBOX_MANDANT_1: &str = "45f149a2-b05a-4de8-a358-6e704eb6efca";
     const BIRD_MANDANT_1: &str = "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2";
@@ -314,6 +315,41 @@ mod tests {
             resp.bird_uuid,
             BIRD_MANDANT_1
         );
+    }
+
+    #[actix_rt::test]
+    async fn test_401_breeds_authenticated_wrong_mandant() {
+        let uri = format!("/nestboxes/{}/breeds", NESTBOX_MANDANT_1);
+        let login_response = login_ok(USER_STRANGER).await;
+        let bird_data: BirdReq = BirdReq {
+            bird: String::from("_"),
+            bird_uuid: String::from(BIRD_MANDANT_1),
+        };
+        let svr_resp = build_app(
+            EndPoints::Breeds(HttpMethod::POST),
+            &uri,
+            &login_response.session,
+            RequestData::Bird(bird_data),
+        )
+        .await;
+        assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[actix_rt::test]
+    async fn test_401_breeds_post_not_authorized() {
+        let uri = format!("/nestboxes/{}/breeds", NESTBOX_MANDANT_1);
+        let bird_data: BirdReq = BirdReq {
+            bird: String::from("_"),
+            bird_uuid: String::from(BIRD_MANDANT_1),
+        };
+        let svr_resp = build_app(
+            EndPoints::Breeds(HttpMethod::POST),
+            &uri,
+            "9973e59f-771d-452f-9a1b-8b4a6d5c4f95",
+            RequestData::Bird(bird_data),
+        )
+        .await;
+        assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
     }
 
     async fn login_ok(user: &str) -> LoginResponse {

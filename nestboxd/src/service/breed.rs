@@ -3,7 +3,11 @@ use mongodb::bson::{doc, DateTime, Document};
 use uuid::Uuid;
 
 use super::service_helper as sa;
-use crate::controller::{req_structs::BirdReq, res_structs::BreedResponse, utilities::{DocumentResponse, PagingQuery}};
+use crate::controller::{
+    req_structs::BirdReq,
+    res_structs::BreedResponse,
+    utilities::{DocumentResponse, PagingQuery},
+};
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use mongodb::{error::Error, Collection, Database};
 

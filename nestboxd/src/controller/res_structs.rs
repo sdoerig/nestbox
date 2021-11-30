@@ -168,7 +168,6 @@ impl MapDocument for BreedResponse {
         }
         if let Some(b) = doc.get("bird_uuid") {
             bird_uuid = b.to_string().replace('"', "");
-            
         }
         if let Ok(b) = doc.get_array("bird") {
             if let Some(t) = b.get(0) {
