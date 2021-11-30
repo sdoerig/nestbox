@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use crate::controller::{
-        req_structs::{BirdReq, LoginReq},
+        req_structs::{BirdReq, GeolocationReq, LoginReq},
         res_structs::{BirdResponse, BreedResponse, LoginResponse, NestboxResponse},
         utilities::DocumentResponse,
         validator::is_uuid,
@@ -105,6 +105,7 @@ mod tests {
     enum RequestData {
         Login(LoginReq),
         Bird(BirdReq),
+        Geolocation(GeolocationReq),
         Empty,
     }
 
@@ -115,7 +116,8 @@ mod tests {
     const PASSWORD_CORRECT: &str = "secretbird";
     const PASSWORD_WRONG: &str = "wrongbird";
     const IMAGE_DIRECTORY: &str = "/tmp/";
-    const USER_STRANGER: &str = "fg_1001";
+    const USER_STRANGER_BREED_POST: &str = "fg_1001";
+    const USER_STRANGER_GEOLOCATION_POST: &str = "fg_1002";
     const USER_MANDANT_1: &str = "fg_200";
     const NESTBOX_MANDANT_1: &str = "45f149a2-b05a-4de8-a358-6e704eb6efca";
     const BIRD_MANDANT_1: &str = "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2";
@@ -318,9 +320,64 @@ mod tests {
     }
 
     #[actix_rt::test]
+    async fn test_204_geolocation_post_ok() {
+        let uri = format!("/nestboxes/{}/geolocations", NESTBOX_MANDANT_1);
+        let login_response = login_ok(USER_MANDANT_1).await;
+        let geolocation = GeolocationReq {
+            long: 8.005,
+            lat: 48.05,
+        };
+        let svr_resp = build_app(
+            EndPoints::Geolocations(HttpMethod::POST),
+            &uri,
+            &login_response.session,
+            RequestData::Geolocation(geolocation),
+        )
+        .await;
+        assert_eq!(svr_resp.status(), StatusCode::CREATED);
+        //let resp: BreedResponse = test::read_body_json(svr_resp).await;
+    }
+
+    #[actix_rt::test]
+    async fn test_401_geolocation_post_no_session_unauthorized() {
+        let uri = format!("/nestboxes/{}/geolocations", NESTBOX_MANDANT_1);
+        let geolocation = GeolocationReq {
+            long: 8.005,
+            lat: 48.05,
+        };
+        let svr_resp = build_app(
+            EndPoints::Geolocations(HttpMethod::POST),
+            &uri,
+            "",
+            RequestData::Geolocation(geolocation),
+        )
+        .await;
+        assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[actix_rt::test]
+    async fn test_401_geolocation_post_authenticated_wrong_mandant() {
+        let uri = format!("/nestboxes/{}/geolocations", NESTBOX_MANDANT_1);
+        let login_response = login_ok(USER_STRANGER_GEOLOCATION_POST).await;
+        let geolocation = GeolocationReq {
+            long: 8.005,
+            lat: 48.05,
+        };
+        let svr_resp = build_app(
+            EndPoints::Geolocations(HttpMethod::POST),
+            &uri,
+            &login_response.session,
+            RequestData::Geolocation(geolocation),
+        )
+        .await;
+        assert_eq!(svr_resp.status(), StatusCode::UNAUTHORIZED);
+        //let resp: BreedResponse = test::read_body_json(svr_resp).await;
+    }
+
+    #[actix_rt::test]
     async fn test_401_breeds_authenticated_wrong_mandant() {
         let uri = format!("/nestboxes/{}/breeds", NESTBOX_MANDANT_1);
-        let login_response = login_ok(USER_STRANGER).await;
+        let login_response = login_ok(USER_STRANGER_BREED_POST).await;
         let bird_data: BirdReq = BirdReq {
             bird: String::from("_"),
             bird_uuid: String::from(BIRD_MANDANT_1),
@@ -402,7 +459,7 @@ mod tests {
                                 String::from(IMAGE_DIRECTORY),
                             ),
                         })
-                        .service(controller::bird::birds_get),
+                        .service(controller::nestbox::nestboxes_locations_post),
                 )
                 .await
             }
@@ -487,6 +544,15 @@ mod tests {
                         .await
                 }
                 RequestData::Bird(req) => {
+                    test::TestRequest::post()
+                        .uri(uri)
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .set_json(&req)
+                        .send_request(&mut app)
+                        .await
+                }
+                RequestData::Geolocation(req) => {
                     test::TestRequest::post()
                         .uri(uri)
                         .header("Content-Type", "application/json")
