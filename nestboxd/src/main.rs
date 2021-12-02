@@ -119,6 +119,7 @@ mod tests {
     const USER_STRANGER_BREED_POST: &str = "fg_1001";
     const USER_STRANGER_GEOLOCATION_POST: &str = "fg_1002";
     const USER_MANDANT_1: &str = "fg_200";
+    const USER_MANDANT_1_GEOLOCATION: &str = "fg_180";
     const NESTBOX_MANDANT_1: &str = "45f149a2-b05a-4de8-a358-6e704eb6efca";
     const BIRD_MANDANT_1: &str = "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2";
     const MANDANT_1: &str = "5bcb187b-996a-4169-8f12-cc315c2b22f7";
@@ -322,7 +323,7 @@ mod tests {
     #[actix_rt::test]
     async fn test_204_geolocation_post_ok() {
         let uri = format!("/nestboxes/{}/geolocations", NESTBOX_MANDANT_1);
-        let login_response = login_ok(USER_MANDANT_1).await;
+        let login_response = login_ok(USER_MANDANT_1_GEOLOCATION).await;
         let geolocation = GeolocationReq {
             long: 8.005,
             lat: 48.05,

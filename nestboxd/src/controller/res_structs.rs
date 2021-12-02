@@ -24,26 +24,19 @@ impl MapDocument for NestboxResponse {
     "mandant":[{"uuid":"c7d880d5-c98d-40ee-bced-b5a0165420c0","name":"BirdLife 0","website":"https://www.birdwatcher.ch"}]}
      */
     fn map_doc(doc: &Document) -> Self {
-        let mut uuid = String::new();
-        let mut created_at = String::new();
-        let mut mandant_uuid = String::new();
+        let uuid = get_string_by_key(doc, "uuid");
+        let created_at = get_date_time_by_key(doc, "created_at");
+        let mandant_uuid = get_string_by_key(doc, "mandant_uuid");
         let mut mandant_name = String::new();
         let mut mandant_website = String::new();
         let mut images: Vec<String> = Vec::new();
-        if let Some(b) = doc.get("uuid") {
-            uuid = b.to_string().replace('"', "");
-        }
-        if let Some(b) = doc.get("created_at") {
-            created_at = b.as_datetime().unwrap().to_string();
-        }
+
         if let Ok(v) = doc.get_array("images") {
             for i in v {
                 images.push(i.to_string().replace('"', ""));
             }
         }
-        if let Some(b) = doc.get("mandant_uuid") {
-            mandant_uuid = b.to_string().replace('"', "");
-        }
+
         if let Ok(v) = doc.get_array("mandant") {
             if let Some(t) = v.get(0) {
                 if let Some(d) = t.as_document() {
@@ -190,5 +183,72 @@ impl MapDocument for BreedResponse {
             bird_uuid,
             bird,
         }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GeolocationResponse {
+    //{
+    //    "uuid" : Uuid::new_v4().to_string(),
+    //    "nestbox_uuid" : nestbox_uuid,
+    //    "from_date" : &now,
+    //    "until_date" : DateTime::from( SystemTime::now() + Duration::new(31536000000, 0)),
+    //    "position" : { "type" : "point", "coordinates" : [ &long, &lat ] } }
+    pub uuid: String,
+    pub nestbox_uuid: String,
+    pub from_date: String,
+    pub until_date: String,
+    pub long: f64,
+    pub lat: f64,
+}
+
+impl MapDocument for GeolocationResponse {
+    fn map_doc(doc: &Document) -> Self {
+        let uuid = get_string_by_key(doc, "uuid");
+        let nestbox_uuid = get_string_by_key(doc, "nestbox_uuid");
+        let from_date = get_date_time_by_key(doc, "from_date");
+        let until_date = get_date_time_by_key(doc, "until_date");
+        let long: f64 = 0.0;
+        let lat: f64 = 0.0;
+        GeolocationResponse {
+            uuid,
+            nestbox_uuid,
+            from_date,
+            until_date,
+            long,
+            lat,
+        }
+    }
+}
+
+fn get_string_by_key(doc: &Document, key: &str) -> String {
+    if let Some(b) = doc.get(key) {
+        b.to_string().replace('"', "")
+    } else {
+        String::from("")
+    }
+}
+
+fn get_f64_by_key(doc: &Document, key: &str) -> f64 {
+    if let Some(b) = doc.get(key) {
+        if let Some(f) = b.as_f64() {
+            f
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    }
+}
+
+fn get_date_time_by_key(doc: &Document, key: &str) -> String {
+    if let Some(b) = doc.get("discovery_date") {
+        if let Some(dt) = b.as_datetime() {
+            dt.to_string()
+        } else {
+            String::from("")
+        }
+    } else {
+        String::from("")
     }
 }

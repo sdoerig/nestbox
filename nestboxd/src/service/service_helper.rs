@@ -20,7 +20,7 @@ pub(crate) async fn read_mongodb_cursor(
 }
 
 pub enum InsertResult {
-    Ok(String),
+    Ok(Document),
     TerminationError,
     InsertError,
 }
