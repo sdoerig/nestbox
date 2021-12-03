@@ -29,13 +29,7 @@ impl MapDocument for NestboxResponse {
         let mandant_uuid = get_string_by_key(doc, "mandant_uuid");
         let mut mandant_name = String::new();
         let mut mandant_website = String::new();
-        let mut images: Vec<String> = Vec::new();
-
-        if let Ok(v) = doc.get_array("images") {
-            for i in v {
-                images.push(i.to_string().replace('"', ""));
-            }
-        }
+        let images = get_vec_string_by_key(doc, "images");
 
         if let Ok(v) = doc.get_array("mandant") {
             if let Some(t) = v.get(0) {
@@ -72,18 +66,14 @@ impl MapDocument for LoginResponse {
     {"username":"fg_199","success":true,"session":"28704470-0908-408e-938f-64dd2b7578b9"}
      */
     fn map_doc(doc: &Document) -> Self {
-        let mut username = String::new();
+        let username = get_string_by_key(doc, "username");
         let mut success = false;
-        let mut session = String::new();
-        if let Some(b) = doc.get("username") {
-            username = b.to_string().replace('"', "");
-        }
+        let session = get_string_by_key(doc, "session");
+
         if let Some(_b) = doc.get("success") {
             success = true;
         }
-        if let Some(b) = doc.get("session") {
-            session = b.to_string().replace('"', "");
-        }
+
         LoginResponse {
             username,
             success,
@@ -102,18 +92,10 @@ pub struct BirdResponse {
 
 impl MapDocument for BirdResponse {
     fn map_doc(doc: &Document) -> Self {
-        let mut uuid = String::new();
-        let mut bird = String::new();
-        let mut bird_website = String::new();
-        if let Some(b) = doc.get("uuid") {
-            uuid = b.to_string().replace('"', "");
-        }
-        if let Some(b) = doc.get("bird") {
-            bird = b.to_string().replace('"', "")
-        }
-        if let Some(b) = doc.get("bird_website") {
-            bird_website = b.to_string().replace('"', "");
-        }
+        let uuid = get_string_by_key(doc, "uuid");
+        let bird = get_string_by_key(doc, "bird");
+        let bird_website = get_string_by_key(doc, "bird_website");
+
         BirdResponse {
             uuid,
             bird,
@@ -138,39 +120,20 @@ pub struct BreedResponse {
 
 impl MapDocument for BreedResponse {
     fn map_doc(doc: &Document) -> Self {
-        let mut uuid = String::from("");
-        let mut nestbox_uuid = String::from("");
-        let mut discovery_date = String::from("");
-        let mut user_uuid = String::from("");
+        let uuid = get_string_by_key(doc, "uuid");
+        let nestbox_uuid = get_string_by_key(doc, "nestbox_uuid");
+        let discovery_date = get_date_time_by_key(doc, "discovery_date");
+        let user_uuid = get_string_by_key(doc, "user_uuid");
         let mut bird_uuid = String::from("");
         let mut bird = String::from("");
 
-        if let Some(b) = doc.get("uuid") {
-            uuid = b.to_string().replace('"', "");
-        }
-        if let Some(b) = doc.get("nestbox_uuid") {
-            nestbox_uuid = b.to_string().replace('"', "");
-        }
-        if let Some(b) = doc.get("user_uuid") {
-            user_uuid = b.to_string().replace('"', "");
-        }
-        if let Some(b) = doc.get("discovery_date") {
-            if let Some(dt) = b.as_datetime() {
-                discovery_date = dt.to_string();
-            }
-        }
-        if let Some(b) = doc.get("bird_uuid") {
-            bird_uuid = b.to_string().replace('"', "");
-        }
+        bird_uuid = get_string_by_key(doc, "bird_uuid");
+
         if let Ok(b) = doc.get_array("bird") {
             if let Some(t) = b.get(0) {
                 if let Some(d) = t.as_document() {
-                    if let Some(bson_bird_uuid) = d.get("uuid") {
-                        bird_uuid = bson_bird_uuid.to_string().replace('"', "");
-                    }
-                    if let Some(bson_bird) = d.get("bird") {
-                        bird = bson_bird.to_string().replace('"', "");
-                    }
+                    bird_uuid = get_string_by_key(d, "uuid");
+                    bird = get_string_by_key(d, "bird");
                 }
             }
         }
@@ -251,4 +214,27 @@ fn get_date_time_by_key(doc: &Document, key: &str) -> String {
     } else {
         String::from("")
     }
+}
+
+fn get_vec_string_by_key(doc: &Document, key: &str) -> Vec<String> {
+    let mut vec_str: Vec<String> = Vec::new();
+    if let Ok(v) = doc.get_array(key) {
+        for i in v {
+            vec_str.push(i.to_string().replace('"', ""));
+        }
+    }
+    vec_str
+}
+
+fn get_doc_by_key(doc: &Document, key: &str) -> Document {
+    if let Ok(b) = doc.get_array("bird") {
+        if let Some(t) = b.get(0) {
+            if let Some(d) = t.as_document() {
+                return d.clone();
+            } else {
+                return Document::new();
+            }
+        }
+    }
+    Document::new()
 }
