@@ -203,7 +203,7 @@ fn get_f64_by_key(doc: &Document, key: &str) -> f64 {
 }
 
 fn get_date_time_by_key(doc: &Document, key: &str) -> String {
-    if let Some(b) = doc.get("discovery_date") {
+    if let Some(b) = doc.get(key) {
         if let Some(dt) = b.as_datetime() {
             dt.to_string()
         } else {
@@ -231,4 +231,95 @@ fn get_doc_by_key<'a>(doc: &'a Document, key: &str) -> Option<&'a Document> {
         }
     }
     None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        BirdResponse, BreedResponse, GeolocationResponse, LoginResponse, MapDocument,
+        NestboxResponse,
+    };
+    use mongodb::bson::{doc, Document};
+    const UUID: &str = "0b5cec76-02ac-4c6e-933e-62ebfae3e337";
+    const NESTBOX_UUID: &str = "6f25fd00-011a-462f-aa3d-6959e6809017";
+    const BIRD_UUID: &str = "ebe661d6-77ba-4bd1-bae3-9e4e7eb880a6";
+    const BIRD_NAME: &str = "bird_17";
+    const DISCOVERY_DATE: &str = "2021-12-05T17:21:11Z";
+
+    #[actix_rt::test]
+    async fn test_breed_response_from_db() {
+        let db_mock_breed_db_doc = doc! {
+        "uuid": UUID,
+        "nestbox_uuid":NESTBOX_UUID,
+        "discovery_date": "2021-06-01T18:36:38.418Z",
+        "bird":[{"uuid": BIRD_UUID,"bird": BIRD_NAME}]};
+        let breed_response = BreedResponse::map_doc(&db_mock_breed_db_doc);
+        assert!(
+            breed_response.uuid == UUID,
+            "DB response: Breed response uuid {} should be {}",
+            breed_response.uuid,
+            UUID
+        );
+        assert!(
+            breed_response.bird_uuid == BIRD_UUID,
+            "DB response: Breed response bird_uuid {} should be {}",
+            breed_response.bird_uuid,
+            BIRD_UUID
+        );
+        assert!(
+            breed_response.nestbox_uuid == NESTBOX_UUID,
+            "DB response: Breed response nestbox_uuid {} should be {}",
+            breed_response.nestbox_uuid,
+            NESTBOX_UUID
+        );
+        assert!(
+            breed_response.bird == BIRD_NAME,
+            "DB response: Breed response bird {} should be {}",
+            breed_response.bird,
+            BIRD_NAME
+        );
+        //assert!(
+        //    breed_response.discovery_date == DISCOVERY_DATE,
+        //    "DB response: Breed response discovery_date {} should be {}",
+        //    breed_response.discovery_date,
+        //    DISCOVERY_DATE
+        //);
+    }
+
+    #[actix_rt::test]
+    async fn test_breed_response_post_new_breed() {
+        let db_mock_breed_post_doc = doc! {
+        "uuid": UUID,
+        "nestbox_uuid":NESTBOX_UUID,
+        "discovery_date":{"$date":{"$numberLong":"1622572598989"}},
+        "bird_uuid": BIRD_UUID};
+        let breed_response = BreedResponse::map_doc(&db_mock_breed_post_doc);
+        assert!(
+            breed_response.uuid == UUID,
+            "Post response: Breed response uuid {} should be {}",
+            breed_response.uuid,
+            UUID
+        );
+        assert!(
+            breed_response.bird_uuid == BIRD_UUID,
+            "Post response: Breed response bird_uuid {} should be {}",
+            breed_response.bird_uuid,
+            BIRD_UUID
+        );
+        assert!(
+            breed_response.nestbox_uuid == NESTBOX_UUID,
+            "Post response: Breed response nestbox_uuid {} should be {}",
+            breed_response.nestbox_uuid,
+            NESTBOX_UUID
+        );
+        assert!(
+            breed_response.bird == *"",
+            "DB response: Breed response bird {} should be {}",
+            breed_response.bird,
+            String::from("")
+        );
+    }
+
+    #[actix_rt::test]
+    async fn test_() {}
 }
