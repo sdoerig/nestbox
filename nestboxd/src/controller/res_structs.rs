@@ -169,8 +169,17 @@ impl MapDocument for GeolocationResponse {
         let nestbox_uuid = get_string_by_key(doc, "nestbox_uuid");
         let from_date = get_date_time_by_key(doc, "from_date");
         let until_date = get_date_time_by_key(doc, "until_date");
-        let long: f64 = 0.0;
-        let lat: f64 = 0.0;
+        let mut long: f64 = 0.0;
+        let mut lat: f64 = 0.0;
+        if let Some(d) = get_doc_by_key(doc, "position") {
+            let long_lat = get_vec_f64_by_key(d, "coordinates");
+            if let Some(_long) = long_lat.get(0) {
+                long = *_long;
+            }
+            if let Some(_lat) = long_lat.get(1) {
+                lat = *_lat;
+            }
+        }
         GeolocationResponse {
             uuid,
             nestbox_uuid,
@@ -224,6 +233,18 @@ fn get_vec_string_by_key(doc: &Document, key: &str) -> Vec<String> {
     vec_str
 }
 
+fn get_vec_f64_by_key(doc: &Document, key: &str) -> Vec<f64> {
+    let mut vec_str: Vec<f64> = Vec::new();
+    if let Ok(v) = doc.get_array(key) {
+        for i in v {
+            if let Some(f) = i.as_f64() {
+                vec_str.push(f);
+            }
+        }
+    }
+    vec_str
+}
+
 fn get_doc_by_key<'a>(doc: &'a Document, key: &str) -> Option<&'a Document> {
     if let Ok(b) = doc.get_array(key) {
         if let Some(t) = b.get(0) {
@@ -235,23 +256,26 @@ fn get_doc_by_key<'a>(doc: &'a Document, key: &str) -> Option<&'a Document> {
 
 #[cfg(test)]
 mod tests {
+    use std::time::{Duration, SystemTime};
+
     use super::{
         BirdResponse, BreedResponse, GeolocationResponse, LoginResponse, MapDocument,
         NestboxResponse,
     };
+    use mongodb::bson::DateTime;
     use mongodb::bson::{doc, Document};
     const UUID: &str = "0b5cec76-02ac-4c6e-933e-62ebfae3e337";
     const NESTBOX_UUID: &str = "6f25fd00-011a-462f-aa3d-6959e6809017";
     const BIRD_UUID: &str = "ebe661d6-77ba-4bd1-bae3-9e4e7eb880a6";
     const BIRD_NAME: &str = "bird_17";
-    const DISCOVERY_DATE: &str = "2021-12-05T17:21:11Z";
+    const DISCOVERY_DATE: &str = "2021-06-01 18:36:38.989 UTC";
 
     #[actix_rt::test]
     async fn test_breed_response_from_db() {
         let db_mock_breed_db_doc = doc! {
         "uuid": UUID,
         "nestbox_uuid":NESTBOX_UUID,
-        "discovery_date": "2021-06-01T18:36:38.418Z",
+        "discovery_date": DateTime::from_millis(1622572598989),
         "bird":[{"uuid": BIRD_UUID,"bird": BIRD_NAME}]};
         let breed_response = BreedResponse::map_doc(&db_mock_breed_db_doc);
         assert!(
@@ -278,12 +302,12 @@ mod tests {
             breed_response.bird,
             BIRD_NAME
         );
-        //assert!(
-        //    breed_response.discovery_date == DISCOVERY_DATE,
-        //    "DB response: Breed response discovery_date {} should be {}",
-        //    breed_response.discovery_date,
-        //    DISCOVERY_DATE
-        //);
+        assert!(
+            breed_response.discovery_date == DISCOVERY_DATE,
+            "DB response: Breed response discovery_date {} should be {}",
+            breed_response.discovery_date,
+            DISCOVERY_DATE
+        );
     }
 
     #[actix_rt::test]
@@ -291,7 +315,7 @@ mod tests {
         let db_mock_breed_post_doc = doc! {
         "uuid": UUID,
         "nestbox_uuid":NESTBOX_UUID,
-        "discovery_date":{"$date":{"$numberLong":"1622572598989"}},
+        "discovery_date": {"$date":{"$numberLong":"1622572598989"}},
         "bird_uuid": BIRD_UUID};
         let breed_response = BreedResponse::map_doc(&db_mock_breed_post_doc);
         assert!(
@@ -321,5 +345,12 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_() {}
+    async fn test_() {
+        let geo_loc = doc! {
+        "uuid" : UUID,
+        "nestbox_uuid" : NESTBOX_UUID,
+        "from_date" : DateTime::from( SystemTime::now() + Duration::new(31536000000, 0)),
+        "until_date" : DateTime::from( SystemTime::now() + Duration::new(31536000000, 0)),
+        "position" : { "type" : "point", "coordinates" : [ 8.567, 46.2345667 ] } };
+    }
 }
