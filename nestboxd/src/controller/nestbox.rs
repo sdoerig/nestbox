@@ -8,7 +8,7 @@ use crate::controller::{
 };
 
 use super::{
-    error_message::{create_error_message, NOT_FOUND},
+    error_message::create_error_message,
     req_structs::{GeolocationReq, NestboxReq},
     utilities::{nestbox_req_is_authorized, parse_auth_header},
     validator::Validator,

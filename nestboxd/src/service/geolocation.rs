@@ -44,7 +44,7 @@ impl GeolocationService {
         "until_date" : DateTime::from( SystemTime::now() + Duration::new(31536000000, 0)),
         "position" : { "type" : "point", "coordinates" : [ &long, &lat ] } };
         match self.collection.insert_one(&geolocation, None).await {
-            Ok(d) => InsertResult::Ok(geolocation),
+            Ok(_d) => InsertResult::Ok(geolocation),
             Err(_) => InsertResult::InsertError,
         }
         //db.geolocations.updateMany({"nestbox_uuid": "eb0c7048-2cda-471d-beb3-7777b7d54858", "until_date": {"$lt": new ISODate("2021-06-12T20:15:31Z")}}, {$set: {"until_date": new ISODate("2021-06-12T20:15:31Z")}})

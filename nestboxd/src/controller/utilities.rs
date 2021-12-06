@@ -38,7 +38,6 @@ impl Sanatiz for PagingQuery {
 pub struct SessionObject {
     valid_session: bool,
     user_uuid: String,
-    session_key: String,
     mandant_uuid: String,
 }
 
@@ -56,7 +55,6 @@ impl SessionObject {
             return SessionObject {
                 user_uuid: String::from("n.a."),
                 valid_session: false,
-                session_key: String::from("n.a."),
                 mandant_uuid: String::from("n.a."),
             };
         }
@@ -65,9 +63,9 @@ impl SessionObject {
             Some(b) => (true, b.to_string().replace('"', "")),
             None => (false, String::from("n.a.")),
         };
-        let (valid_session_key, session_key) = match session_document.get("session_key") {
-            Some(b) => (true, b.to_string().replace('"', "")),
-            None => (false, String::from("n.a.")),
+        let valid_session_key = match session_document.get("session_key") {
+            Some(_b) => true,
+            None => false,
         };
         let (valid_user_uuid, user_uuid) = match session_document.get("uuid") {
             Some(b) => (true, b.to_string().replace('"', "")),
@@ -77,7 +75,6 @@ impl SessionObject {
         SessionObject {
             user_uuid,
             valid_session: (valid_mandant && valid_session_key && valid_user_uuid),
-            session_key,
             mandant_uuid,
         }
     }
@@ -88,10 +85,6 @@ impl SessionObject {
 
     pub fn get_user_uuid(&self) -> &str {
         self.user_uuid.as_str()
-    }
-
-    pub fn get_session_key(&self) -> &str {
-        self.session_key.as_str()
     }
 
     pub fn is_valid_session(&self) -> bool {

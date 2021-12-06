@@ -6,7 +6,6 @@ use crate::controller::{
     validator::Validator,
 };
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
-use mongodb::bson::doc;
 
 use super::{
     error_message::{create_error_message, INTERNAL_SERVER_ERROR},

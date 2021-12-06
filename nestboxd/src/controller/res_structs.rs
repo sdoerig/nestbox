@@ -124,10 +124,9 @@ impl MapDocument for BreedResponse {
         let nestbox_uuid = get_string_by_key(doc, "nestbox_uuid");
         let discovery_date = get_date_time_by_key(doc, "discovery_date");
         let user_uuid = get_string_by_key(doc, "user_uuid");
-        let mut bird_uuid = String::from("");
-        let mut bird = String::from("");
         // bird_uuid can be on top level or...
-        bird_uuid = get_string_by_key(doc, "bird_uuid");
+        let mut bird_uuid = get_string_by_key(doc, "bird_uuid");
+        let mut bird = String::from("");
 
         // ... can result from a join over two collection and then it'll be found
         // in an own document - ugly I think of a better solution.
