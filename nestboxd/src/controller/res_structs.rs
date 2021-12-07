@@ -5,7 +5,7 @@ pub trait MapDocument {
     fn map_doc(doc: &Document) -> Self;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct NestboxResponse {
     pub uuid: String,
     pub created_at: String,
@@ -54,7 +54,7 @@ impl MapDocument for NestboxResponse {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct LoginResponse {
     pub username: String,
     pub success: bool,
@@ -82,7 +82,7 @@ impl MapDocument for LoginResponse {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BirdResponse {
     //"uuid":"decd3296-0d22-427a-b92c-51c0ac2ae23a","bird":"bird_0"
     pub uuid: String,
@@ -104,7 +104,7 @@ impl MapDocument for BirdResponse {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct BreedResponse {
     //{"uuid":"0b5cec76-02ac-4c6e-933e-62ebfae3e337",
     // "nestbox_uuid":"6f25fd00-011a-462f-aa3d-6959e6809017",
@@ -146,7 +146,7 @@ impl MapDocument for BreedResponse {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct GeolocationResponse {
     //{
     //    "uuid" : Uuid::new_v4().to_string(),

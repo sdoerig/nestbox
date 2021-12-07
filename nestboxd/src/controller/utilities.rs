@@ -13,7 +13,7 @@ use super::validator::is_uuid;
 const MAX_PAGE_LIMIT: i64 = 100;
 const HTTP_AUTHORIZATION: &str = "Authorization";
 
-#[derive(Deserialize)]
+#[derive(Default, Debug, Clone, Deserialize)]
 pub struct PagingQuery {
     pub page_limit: i64,
     pub page_number: i64,
@@ -92,7 +92,7 @@ impl SessionObject {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct DocumentResponse<P> {
     pub documents: Vec<P>,
     pub counted_documents: i64,
