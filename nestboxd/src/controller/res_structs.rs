@@ -198,18 +198,6 @@ fn get_string_by_key(doc: &Document, key: &str) -> String {
     }
 }
 
-fn get_f64_by_key(doc: &Document, key: &str) -> f64 {
-    if let Some(b) = doc.get(key) {
-        if let Some(f) = b.as_f64() {
-            f
-        } else {
-            0.0
-        }
-    } else {
-        0.0
-    }
-}
-
 fn get_date_time_by_key(doc: &Document, key: &str) -> String {
     if let Some(b) = doc.get(key) {
         if let Some(dt) = b.as_datetime() {
