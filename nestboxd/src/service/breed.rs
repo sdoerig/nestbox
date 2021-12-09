@@ -123,7 +123,7 @@ mod tests {
         let nestbox_req = NestboxReq {
             uuid: String::from(NESTBOX_UUID_OK),
         };
-        let (documents, counted_documents) = breeds_service
+        let (_documents, counted_documents) = breeds_service
             .get_by_nestbox_uuid(
                 &session,
                 &nestbox_req,

@@ -441,7 +441,40 @@ curl  http://127.0.0.1:8080/nestboxes/1bec20fc-5416-4941-b7e4-e15aa26a5c7a
 {"_id":{"$oid":"60b67e360047576800f56ba1"},"public":true,"uuid":"1bec20fc-5416-4941-b7e4-e15aa26a5c7a","mandant_uuid":"c7d880d5-c98d-40ee-bced-b5a0165420c0","created_at":{"$date":"2021-06-01T18:36:38.418Z"}}
 ``` 
 
+### post /nestboxes/{uuid}/images
 
+#### Request
+Allows to post an image of the testbox.
+```
+curl -v   -H "Authorization: Basic 3c88c048-8e06-4332-ae11-c82cd991a383"   -H "Content-Type: application/json"   --request POST   -F secret=@../../../Nextcloud/SofortUpload/Camera/20211024_170535.jpg   http://127.0.0.1:8080/nestboxes/140a3916-a2d8-4ca9-bae8-7e3c15428e8f/images
+```
+
+#### Response
+
+If authenticated and authorized a SHA3 hash of the file is returned.
+
+```
+< HTTP/1.1 201 Created
+< content-length: 86
+< content-type: application/json
+< date: Thu, 09 Dec 2021 18:03:50 GMT
+< 
+
+{"file_name":["c9aff3597f2fbc4dd5a22c9c0764c2324c5dd68776a367ac150e6a40bfed6526.jpg"]}
+```
+
+If not authenticated or authorized 
+
+```
+< HTTP/1.1 401 Unauthorized
+< content-length: 42
+< content-type: application/json
+< date: Thu, 09 Dec 2021 18:06:40 GMT
+* HTTP error before end of send, stop sending
+< 
+* Closing connection 0
+{"error":2,"error_message":"UNAUTHORIZED"}
+```
 
 
 
