@@ -1,16 +1,17 @@
 pub use crate::controller::utilities::{PagingQuery, Sanatiz};
-use crate::controller::{
-    error_message::BAD_REQUEST,
-    res_structs::MapDocument,
-    utilities::{nestbox_req_is_authorized, DocumentResponse},
-    validator::Validator,
+use crate::{
+    controller::{
+        error_message::BAD_REQUEST,
+        utilities::{nestbox_req_is_authorized, DocumentResponse},
+        validator::Validator,
+    },
+    service::res_structs::BreedResponse,
 };
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 
 use super::{
     error_message::{create_error_message, INTERNAL_SERVER_ERROR},
     req_structs::{BirdReq, NestboxReq},
-    res_structs::BreedResponse,
     utilities::parse_auth_header,
 };
 
@@ -36,12 +37,9 @@ pub async fn breeds_get(
         .breed
         .get_by_nestbox_uuid(&session_obj, &breed_req, &paging)
         .await;
-    let mut breed_responses: Vec<BreedResponse> = Vec::new();
-    for d in breeds {
-        breed_responses.push(BreedResponse::map_doc(&d));
-    }
+
     HttpResponse::Ok().json(DocumentResponse::<BreedResponse>::new(
-        breed_responses,
+        breeds,
         counted_documents,
         &paging,
     ))
@@ -78,7 +76,7 @@ pub async fn breeds_post(
         .post_breed(&session, &nestbox_req, &bird_req)
         .await
     {
-        Ok(d) => HttpResponse::Created().json(BreedResponse::map_doc(&d)),
+        Ok(d) => HttpResponse::Created().json(d),
         Err(_e) => {
             HttpResponse::InternalServerError().json(create_error_message(INTERNAL_SERVER_ERROR))
         }

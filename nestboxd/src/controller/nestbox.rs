@@ -2,10 +2,7 @@ use actix_multipart::Multipart;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use mongodb::bson::doc;
 
-use crate::controller::{
-    error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR},
-    res_structs::{MapDocument, NestboxResponse},
-};
+use crate::controller::error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR};
 
 use super::{
     error_message::create_error_message,
@@ -29,7 +26,7 @@ pub async fn nestboxes_get(
         .get_by_uuid(&nestbox.uuid)
         .await;
     match result.get(0) {
-        Some(doc) => HttpResponse::Ok().json(NestboxResponse::map_doc(doc)),
+        Some(nestbox) => HttpResponse::Ok().json(nestbox),
         None => HttpResponse::NotFound().finish(),
     }
 }

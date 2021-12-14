@@ -1,6 +1,6 @@
 use actix_web::{post, web, HttpResponse, Responder};
 
-use crate::controller::{req_structs::LoginReq, res_structs::LoginResponse};
+use crate::{controller::req_structs::LoginReq, service::res_structs::LoginResponse};
 
 use super::error_message::{create_error_message, UNAUTHORIZED};
 

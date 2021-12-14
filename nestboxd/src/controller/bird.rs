@@ -1,10 +1,9 @@
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 
-use crate::controller::{res_structs::MapDocument, utilities::DocumentResponse};
+use crate::{controller::utilities::DocumentResponse, service::res_structs::BirdResponse};
 
 use super::{
     error_message::{create_error_message, UNAUTHORIZED},
-    res_structs::BirdResponse,
     utilities::{parse_auth_header, PagingQuery, Sanatiz},
 };
 
@@ -29,13 +28,9 @@ pub async fn birds_get(
         .bird
         .get_by_mandant_uuid(&session_obj, &paging)
         .await;
-    let mut bird_documents: Vec<BirdResponse> = Vec::new();
-    for bird in birds {
-        bird_documents.push(BirdResponse::map_doc(&bird));
-    }
 
     HttpResponse::Ok().json(DocumentResponse::<BirdResponse>::new(
-        bird_documents,
+        birds,
         counted_documents,
         &paging,
     ))

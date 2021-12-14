@@ -2,6 +2,7 @@ use mongodb::bson::{doc, DateTime, Document};
 //use chrono::Utc;
 use uuid::Uuid;
 
+use super::res_structs::{BreedResponse, MapDocument};
 use super::service_helper as sa;
 use crate::controller::{req_structs::BirdReq, utilities::PagingQuery};
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
@@ -26,7 +27,7 @@ impl BreedService {
         session_obj: &SessionObject,
         req: &NestboxReq,
         paging: &PagingQuery,
-    ) -> (Vec<Document>, i64) {
+    ) -> (Vec<BreedResponse>, i64) {
         let mut projection =
             doc! {"$project": {"_id": 0, "mandant_uuid": 0, "user_uuid": 0, "bird_uuid": 0}};
         if session_obj.is_valid_session() {
@@ -67,12 +68,18 @@ impl BreedService {
         let counted_documents_res = self.get_by_nestbox_count(&req.uuid).await;
 
         let documents = sa::read_mongodb_cursor(res).await;
+
+        let mut breed_responses: Vec<BreedResponse> = Vec::new();
+        for d in documents {
+            breed_responses.push(BreedResponse::map_doc(&d));
+        }
+
         let counted_documents = match counted_documents_res {
             Ok(i) => i,
             Err(_e) => 0,
         };
 
-        (documents, counted_documents as i64)
+        (breed_responses, counted_documents as i64)
     }
 
     pub async fn get_by_nestbox_count(&self, nestbox_uuid: &str) -> Result<u64, Error> {
@@ -86,7 +93,7 @@ impl BreedService {
         session_obj: &SessionObject,
         nestbox_req: &NestboxReq,
         bird: &BirdReq,
-    ) -> std::result::Result<mongodb::bson::Document, Error> {
+    ) -> std::result::Result<BreedResponse, Error> {
         let breed = doc! {
         "uuid": Uuid::new_v4().to_string(),
         "nestbox_uuid": &nestbox_req.uuid,
@@ -94,7 +101,7 @@ impl BreedService {
         "discovery_date": DateTime::now(),
         "bird_uuid": &bird.bird_uuid};
         match self.collection.insert_one(&breed, None).await {
-            Ok(_o) => Ok(breed),
+            Ok(_o) => Ok(BreedResponse::map_doc(&breed)),
             Err(e) => Err(e),
         }
     }

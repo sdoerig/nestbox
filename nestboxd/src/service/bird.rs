@@ -1,6 +1,9 @@
 use mongodb::bson::{doc, Document};
 
-use super::service_helper as sa;
+use super::{
+    res_structs::{BirdResponse, MapDocument},
+    service_helper as sa,
+};
 use crate::controller::utilities::{PagingQuery, SessionObject};
 use mongodb::{error::Error, Collection, Database};
 
@@ -22,7 +25,7 @@ impl BirdService {
         &self,
         session_obj: &SessionObject,
         paging: &PagingQuery,
-    ) -> (Vec<Document>, i64) {
+    ) -> (Vec<BirdResponse>, i64) {
         let res = self
             .collection
             .aggregate(
@@ -44,7 +47,12 @@ impl BirdService {
             Err(_e) => 0,
         };
 
-        (documents, counted_documents as i64)
+        let mut bird_documents: Vec<BirdResponse> = Vec::new();
+        for bird in documents {
+            bird_documents.push(BirdResponse::map_doc(&bird));
+        }
+
+        (bird_documents, counted_documents as i64)
     }
 
     pub async fn get_by_mandant_uuid_count(

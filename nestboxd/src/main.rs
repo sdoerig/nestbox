@@ -78,9 +78,11 @@ async fn main() -> std::io::Result<()> {
 mod tests {
     use crate::controller::{
         req_structs::{BirdReq, GeolocationReq, LoginReq},
-        res_structs::{BirdResponse, BreedResponse, LoginResponse, NestboxResponse},
         utilities::DocumentResponse,
         validator::is_uuid,
+    };
+    use crate::service::res_structs::{
+        BirdResponse, BreedResponse, LoginResponse, NestboxResponse,
     };
 
     use super::*;
@@ -89,8 +91,8 @@ mod tests {
 
     #[derive(Clone)]
     enum HttpMethod {
-        POST,
-        GET,
+        Post,
+        Get,
     }
 
     #[derive(Clone)]
@@ -134,7 +136,7 @@ mod tests {
             password: String::from(PASSWORD_CORRECT),
         };
         let svr_resp = build_app(
-            EndPoints::Login(HttpMethod::POST),
+            EndPoints::Login(HttpMethod::Post),
             uri,
             "",
             RequestData::Login(user_data),
@@ -157,7 +159,7 @@ mod tests {
             password: String::from(PASSWORD_WRONG),
         };
         let svr_resp = build_app(
-            EndPoints::Login(HttpMethod::POST),
+            EndPoints::Login(HttpMethod::Post),
             uri,
             "",
             RequestData::Login(user_data),
@@ -170,7 +172,7 @@ mod tests {
     async fn test_200_nestbox_get() {
         let uri = format!("/nestboxes/{}", NESTBOX_EXISTING);
         let svr_resp = build_app(
-            EndPoints::Nestboxes(HttpMethod::GET),
+            EndPoints::Nestboxes(HttpMethod::Get),
             &uri,
             "",
             RequestData::Empty,
@@ -185,7 +187,7 @@ mod tests {
     async fn test_404_nestbox_get() {
         let uri = format!("/nestboxes/{}", NESTBOX_NOT_EXISTING);
         let svr_resp = build_app(
-            EndPoints::Nestboxes(HttpMethod::GET),
+            EndPoints::Nestboxes(HttpMethod::Get),
             &uri,
             "",
             RequestData::Empty,
@@ -198,7 +200,7 @@ mod tests {
     async fn test_401_birds_get() {
         let uri = "/birds?page_limit=100&page_number=1";
         let svr_resp = build_app(
-            EndPoints::Birds(HttpMethod::GET),
+            EndPoints::Birds(HttpMethod::Get),
             uri,
             "",
             RequestData::Empty,
@@ -212,7 +214,7 @@ mod tests {
         let login_response = login_ok(USER_BIRDS_TEST).await;
         let uri = "/birds?page_limit=100&page_number=1";
         let svr_resp = build_app(
-            EndPoints::Birds(HttpMethod::GET),
+            EndPoints::Birds(HttpMethod::Get),
             uri,
             &(login_response.session),
             RequestData::Empty,
@@ -230,7 +232,7 @@ mod tests {
                 paging_response.page_number + 1
             );
             let svr_resp = build_app(
-                EndPoints::Birds(HttpMethod::GET),
+                EndPoints::Birds(HttpMethod::Get),
                 &uri,
                 &login_response.session,
                 RequestData::Empty,
@@ -255,7 +257,7 @@ mod tests {
             NESTBOX_EXISTING
         );
         let svr_resp = build_app(
-            EndPoints::Breeds(HttpMethod::GET),
+            EndPoints::Breeds(HttpMethod::Get),
             &uri,
             "",
             RequestData::Empty,
@@ -274,7 +276,7 @@ mod tests {
                 paging_response.page_number + 1
             );
             let svr_resp = build_app(
-                EndPoints::Breeds(HttpMethod::GET),
+                EndPoints::Breeds(HttpMethod::Get),
                 &uri,
                 "",
                 RequestData::Empty,
@@ -303,7 +305,7 @@ mod tests {
             bird_uuid: String::from(BIRD_MANDANT_1),
         };
         let svr_resp = build_app(
-            EndPoints::Breeds(HttpMethod::POST),
+            EndPoints::Breeds(HttpMethod::Post),
             &uri,
             &login_response.session,
             RequestData::Bird(bird_data),
@@ -329,7 +331,7 @@ mod tests {
             lat: 48.05,
         };
         let svr_resp = build_app(
-            EndPoints::Geolocations(HttpMethod::POST),
+            EndPoints::Geolocations(HttpMethod::Post),
             &uri,
             &login_response.session,
             RequestData::Geolocation(geolocation),
@@ -347,7 +349,7 @@ mod tests {
             lat: 48.05,
         };
         let svr_resp = build_app(
-            EndPoints::Geolocations(HttpMethod::POST),
+            EndPoints::Geolocations(HttpMethod::Post),
             &uri,
             "",
             RequestData::Geolocation(geolocation),
@@ -365,7 +367,7 @@ mod tests {
             lat: 48.05,
         };
         let svr_resp = build_app(
-            EndPoints::Geolocations(HttpMethod::POST),
+            EndPoints::Geolocations(HttpMethod::Post),
             &uri,
             &login_response.session,
             RequestData::Geolocation(geolocation),
@@ -384,7 +386,7 @@ mod tests {
             bird_uuid: String::from(BIRD_MANDANT_1),
         };
         let svr_resp = build_app(
-            EndPoints::Breeds(HttpMethod::POST),
+            EndPoints::Breeds(HttpMethod::Post),
             &uri,
             &login_response.session,
             RequestData::Bird(bird_data),
@@ -401,7 +403,7 @@ mod tests {
             bird_uuid: String::from(BIRD_MANDANT_1),
         };
         let svr_resp = build_app(
-            EndPoints::Breeds(HttpMethod::POST),
+            EndPoints::Breeds(HttpMethod::Post),
             &uri,
             "9973e59f-771d-452f-9a1b-8b4a6d5c4f95",
             RequestData::Bird(bird_data),
@@ -418,7 +420,7 @@ mod tests {
             password: String::from(PASSWORD_CORRECT),
         };
         let svr_login_resp = build_app(
-            EndPoints::Login(HttpMethod::POST),
+            EndPoints::Login(HttpMethod::Post),
             uri,
             "",
             RequestData::Login(user_data),
@@ -434,7 +436,7 @@ mod tests {
         sessiontoken: &str,
         req: RequestData,
     ) -> actix_web::dev::ServiceResponse {
-        let mut http_method = HttpMethod::GET;
+        let mut http_method = HttpMethod::Get;
         let mut app = match endpoint {
             EndPoints::Birds(m) => {
                 http_method = m.clone();
@@ -465,7 +467,7 @@ mod tests {
                 .await
             }
             EndPoints::Breeds(m) => match m {
-                HttpMethod::POST => {
+                HttpMethod::Post => {
                     http_method = m.clone();
                     test::init_service(
                         App::new()
@@ -479,7 +481,7 @@ mod tests {
                     )
                     .await
                 }
-                HttpMethod::GET => {
+                HttpMethod::Get => {
                     http_method = m.clone();
                     test::init_service(
                         App::new()
@@ -526,7 +528,7 @@ mod tests {
         };
 
         match http_method {
-            HttpMethod::POST => match req {
+            HttpMethod::Post => match req {
                 RequestData::Empty => {
                     test::TestRequest::post()
                         .uri(uri)
@@ -563,7 +565,7 @@ mod tests {
                         .await
                 }
             },
-            HttpMethod::GET => {
+            HttpMethod::Get => {
                 test::TestRequest::get()
                     .uri(uri)
                     .header("Authorization", format!("Basic {}", sessiontoken))

@@ -1,3 +1,4 @@
+use super::res_structs::{MapDocument, NestboxResponse};
 use super::service_helper as sa;
 use crate::controller::{req_structs::NestboxReq, utilities::SessionObject};
 use mongodb::bson::{doc, Document};
@@ -16,7 +17,7 @@ impl NestboxService {
         }
     }
 
-    pub async fn get_by_uuid(&self, uuid: &str) -> Vec<Document> {
+    pub async fn get_by_uuid(&self, uuid: &str) -> Vec<NestboxResponse> {
         /*
                 Example aggreation request
                 {"$match": {"uuid": {"$eq": "4ea60d3e-4a81-4bcc-b96a-c508fe73a48a"}}},
@@ -76,8 +77,11 @@ impl NestboxService {
                 None,
             )
             .await;
-        let nestbox = sa::read_mongodb_cursor(res).await;
-        nestbox
+        let mut nestboxes: Vec<NestboxResponse> = Vec::new();
+        for d in sa::read_mongodb_cursor(res).await {
+            nestboxes.push(NestboxResponse::map_doc(&d))
+        }
+        nestboxes
     }
 
     pub async fn get_by_mandant_uuid(
@@ -134,16 +138,7 @@ mod tests {
         let nestbox_service = NestboxService::new(&db);
 
         let nestbox = nestbox_service.get_by_uuid(NESTBOX_UUID_OK).await;
-        assert_eq!(
-            nestbox
-                .get(0)
-                .unwrap()
-                .get("uuid")
-                .unwrap()
-                .to_string()
-                .replace('"', ""),
-            String::from(NESTBOX_UUID_OK)
-        );
+        assert_eq!(nestbox.get(0).unwrap().uuid, String::from(NESTBOX_UUID_OK));
     }
     #[actix_rt::test]
     async fn test_service_nestbox_get_by_mandant_uuid_ok() {
