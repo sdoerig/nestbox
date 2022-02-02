@@ -59,7 +59,7 @@ async fn main() -> std::io::Result<()> {
             ServiceContainer::new(db.clone(), config_struct.image_directory.clone());
 
         App::new()
-            .data(AppState { service_container })
+            .app_data(AppState { service_container })
             .service(controller::nestbox::nestboxes_get)
             .service(controller::user::login_post)
             .service(controller::breed::breeds_get)
@@ -89,13 +89,8 @@ mod tests {
 
     use actix_web::{http::StatusCode, test, App};
     //use actix_web::http::header::{HeaderName, HeaderValue};
-    //use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE};
     use actix_http::header::map::HeaderMap;
-    use actix_http::header::{HeaderName, HeaderValue};
-    
-
-    
-    
+    use actix_http::header::{Header, HeaderName, HeaderValue};
 
     #[derive(Clone)]
     enum HttpMethod {
@@ -450,7 +445,7 @@ mod tests {
                 http_method = m.clone();
                 test::init_service(
                     App::new()
-                        .data(AppState {
+                        .app_data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
                                 String::from(IMAGE_DIRECTORY),
@@ -464,7 +459,7 @@ mod tests {
                 http_method = m.clone();
                 test::init_service(
                     App::new()
-                        .data(AppState {
+                        .app_data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
                                 String::from(IMAGE_DIRECTORY),
@@ -479,7 +474,7 @@ mod tests {
                     http_method = m.clone();
                     test::init_service(
                         App::new()
-                            .data(AppState {
+                            .app_data(AppState {
                                 service_container: ServiceContainer::new(
                                     get_db().await,
                                     String::from(IMAGE_DIRECTORY),
@@ -493,7 +488,7 @@ mod tests {
                     http_method = m.clone();
                     test::init_service(
                         App::new()
-                            .data(AppState {
+                            .app_data(AppState {
                                 service_container: ServiceContainer::new(
                                     get_db().await,
                                     String::from(IMAGE_DIRECTORY),
@@ -509,7 +504,7 @@ mod tests {
                 http_method = m.clone();
                 test::init_service(
                     App::new()
-                        .data(AppState {
+                        .app_data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
                                 String::from(IMAGE_DIRECTORY),
@@ -523,7 +518,7 @@ mod tests {
                 // Caution GET only implemented.
                 test::init_service(
                     App::new()
-                        .data(AppState {
+                        .app_data(AppState {
                             service_container: ServiceContainer::new(
                                 get_db().await,
                                 String::from(IMAGE_DIRECTORY),
@@ -535,11 +530,22 @@ mod tests {
             }
         };
 
-        let mut hm = HeaderMap::new();
-        hm.insert(HeaderName::from_static("Content-Type"), HeaderValue::from_static("application/json"));
-        hm.insert(HeaderName::from_static("Authorization"), HeaderValue::from_static(&format!("Basic {}", sessiontoken)));
+        let mut hm: HeaderMap = HeaderMap::new();
+        hm.insert(
+            actix_web::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
+        hm.insert(
+            actix_web::http::header::AUTHORIZATION,
+            HeaderValue::from_static(&format!("Basic {}", sessiontoken)),
+        );
+        let mut header = HeaderName::from_static("aa");
+
         let mut hm_auth_only = HeaderMap::new();
-        hm_auth_only.insert(HeaderName::from_static("Authorization"), HeaderValue::from_static(&format!("Basic {}", sessiontoken)));
+        hm_auth_only.insert(
+            HeaderName::from_static("Authorization"),
+            HeaderValue::from_static(&format!("Basic {}", sessiontoken)),
+        );
         match http_method {
             HttpMethod::Post => match req {
                 RequestData::Empty => {
