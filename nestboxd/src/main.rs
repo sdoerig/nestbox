@@ -88,6 +88,14 @@ mod tests {
     use super::*;
 
     use actix_web::{http::StatusCode, test, App};
+    //use actix_web::http::header::{HeaderName, HeaderValue};
+    //use actix_web::http::header::{AUTHORIZATION, CONTENT_TYPE};
+    use actix_http::header::map::HeaderMap;
+    use actix_http::header::{HeaderName, HeaderValue};
+    
+
+    
+    
 
     #[derive(Clone)]
     enum HttpMethod {
@@ -527,21 +535,24 @@ mod tests {
             }
         };
 
+        let mut hm = HeaderMap::new();
+        hm.insert(HeaderName::from_static("Content-Type"), HeaderValue::from_static("application/json"));
+        hm.insert(HeaderName::from_static("Authorization"), HeaderValue::from_static(&format!("Basic {}", sessiontoken)));
+        let mut hm_auth_only = HeaderMap::new();
+        hm_auth_only.insert(HeaderName::from_static("Authorization"), HeaderValue::from_static(&format!("Basic {}", sessiontoken)));
         match http_method {
             HttpMethod::Post => match req {
                 RequestData::Empty => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .insert_header(hm)
                         .send_request(&mut app)
                         .await
                 }
                 RequestData::Login(req) => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .insert_header(hm)
                         .set_json(&req)
                         .send_request(&mut app)
                         .await
@@ -549,8 +560,7 @@ mod tests {
                 RequestData::Bird(req) => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .insert_header(hm)
                         .set_json(&req)
                         .send_request(&mut app)
                         .await
@@ -558,8 +568,7 @@ mod tests {
                 RequestData::Geolocation(req) => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .header("Content-Type", "application/json")
-                        .header("Authorization", format!("Basic {}", sessiontoken))
+                        .insert_header(hm)
                         .set_json(&req)
                         .send_request(&mut app)
                         .await
@@ -568,7 +577,7 @@ mod tests {
             HttpMethod::Get => {
                 test::TestRequest::get()
                     .uri(uri)
-                    .header("Authorization", format!("Basic {}", sessiontoken))
+                    .insert_header(hm_auth_only)
                     .send_request(&mut app)
                     .await
             }
