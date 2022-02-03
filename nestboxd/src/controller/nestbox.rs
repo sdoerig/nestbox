@@ -2,7 +2,10 @@ use actix_multipart::Multipart;
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use mongodb::bson::doc;
 
-use crate::controller::error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR};
+use crate::{
+    controller::error_message::{BAD_REQUEST, INTERNAL_SERVER_ERROR},
+    ServiceContainer,
+};
 
 use super::{
     error_message::create_error_message,
@@ -13,18 +16,14 @@ use super::{
 
 #[get("/nestboxes/{uuid}")]
 pub async fn nestboxes_get(
-    app_data: web::Data<crate::AppState>,
+    app_data: web::Data<ServiceContainer>,
     nestbox: web::Path<NestboxReq>,
 ) -> HttpResponse {
     if !nestbox.is_valid() {
         return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
 
-    let result = app_data
-        .service_container
-        .nestbox
-        .get_by_uuid(&nestbox.uuid)
-        .await;
+    let result = app_data.nestbox.get_by_uuid(&nestbox.uuid).await;
     match result.get(0) {
         Some(nestbox) => HttpResponse::Ok().json(nestbox),
         None => HttpResponse::NotFound().finish(),
@@ -33,27 +32,22 @@ pub async fn nestboxes_get(
 
 #[post("/nestboxes/{uuid}/images")]
 pub async fn nestboxes_images_post(
-    app_data: web::Data<crate::AppState>,
+    app_data: web::Data<ServiceContainer>,
     req: HttpRequest,
     nestbox_req: web::Path<NestboxReq>,
     payload: Multipart,
 ) -> impl Responder {
     let session_uuid = parse_auth_header(&req);
-    let session = app_data
-        .service_container
-        .session
-        .validate_session(&session_uuid)
-        .await;
+    let session = app_data.session.validate_session(&session_uuid).await;
     if !nestbox_req.is_valid() {
         return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
     if let Some(value) = nestbox_req_is_authorized(&session, &app_data, &nestbox_req).await {
         return value;
     }
-    let upload_status = app_data.service_container.image.save_file(payload).await;
+    let upload_status = app_data.image.save_file(payload).await;
     if let Some(file_name) = upload_status {
         if app_data
-            .service_container
             .nestbox
             .append_image_by_uuid(&nestbox_req.uuid, &file_name)
             .await
@@ -69,17 +63,13 @@ pub async fn nestboxes_images_post(
 
 #[post("/nestboxes/{uuid}/geolocations")]
 pub async fn nestboxes_locations_post(
-    app_data: web::Data<crate::AppState>,
+    app_data: web::Data<ServiceContainer>,
     req: HttpRequest,
     nestbox_req: web::Path<NestboxReq>,
     geoloc_req: web::Json<GeolocationReq>,
 ) -> impl Responder {
     let session_uuid = parse_auth_header(&req);
-    let session = app_data
-        .service_container
-        .session
-        .validate_session(&session_uuid)
-        .await;
+    let session = app_data.session.validate_session(&session_uuid).await;
     if !nestbox_req.is_valid() {
         return HttpResponse::BadRequest().json(create_error_message(BAD_REQUEST));
     }
@@ -89,7 +79,6 @@ pub async fn nestboxes_locations_post(
     }
 
     match app_data
-        .service_container
         .geolocation
         .post_geolocation(&nestbox_req.uuid, geoloc_req.long, geoloc_req.lat)
         .await

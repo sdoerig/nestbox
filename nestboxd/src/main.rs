@@ -1,3 +1,4 @@
+use actix_web::web::Data;
 use actix_web::{middleware::Logger, App, HttpServer};
 use extract_argv::{extract_argv, parse_yaml};
 use mongodb::{options::ClientOptions, Client, Database};
@@ -37,10 +38,6 @@ impl ServiceContainer {
     }
 }
 
-pub struct AppState {
-    service_container: ServiceContainer,
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let config_struct = parse_yaml(extract_argv());
@@ -55,11 +52,11 @@ async fn main() -> std::io::Result<()> {
     let db = client.database(&config_struct.mongodb_database);
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     HttpServer::new(move || {
-        let service_container =
-            ServiceContainer::new(db.clone(), config_struct.image_directory.clone());
-
         App::new()
-            .app_data(AppState { service_container })
+            .app_data(Data::new(ServiceContainer::new(
+                db.clone(),
+                config_struct.image_directory.clone(),
+            )))
             .service(controller::nestbox::nestboxes_get)
             .service(controller::user::login_post)
             .service(controller::breed::breeds_get)
@@ -445,12 +442,10 @@ mod tests {
                 http_method = m.clone();
                 test::init_service(
                     App::new()
-                        .app_data(AppState {
-                            service_container: ServiceContainer::new(
-                                get_db().await,
-                                String::from(IMAGE_DIRECTORY),
-                            ),
-                        })
+                        .app_data(Data::new(ServiceContainer::new(
+                            get_db().await,
+                            String::from(IMAGE_DIRECTORY),
+                        )))
                         .service(controller::bird::birds_get),
                 )
                 .await
@@ -459,12 +454,10 @@ mod tests {
                 http_method = m.clone();
                 test::init_service(
                     App::new()
-                        .app_data(AppState {
-                            service_container: ServiceContainer::new(
-                                get_db().await,
-                                String::from(IMAGE_DIRECTORY),
-                            ),
-                        })
+                        .app_data(Data::new(ServiceContainer::new(
+                            get_db().await,
+                            String::from(IMAGE_DIRECTORY),
+                        )))
                         .service(controller::nestbox::nestboxes_locations_post),
                 )
                 .await
@@ -474,12 +467,10 @@ mod tests {
                     http_method = m.clone();
                     test::init_service(
                         App::new()
-                            .app_data(AppState {
-                                service_container: ServiceContainer::new(
-                                    get_db().await,
-                                    String::from(IMAGE_DIRECTORY),
-                                ),
-                            })
+                            .app_data(Data::new(ServiceContainer::new(
+                                get_db().await,
+                                String::from(IMAGE_DIRECTORY),
+                            )))
                             .service(controller::breed::breeds_post),
                     )
                     .await
@@ -488,12 +479,10 @@ mod tests {
                     http_method = m.clone();
                     test::init_service(
                         App::new()
-                            .app_data(AppState {
-                                service_container: ServiceContainer::new(
-                                    get_db().await,
-                                    String::from(IMAGE_DIRECTORY),
-                                ),
-                            })
+                            .app_data(Data::new(ServiceContainer::new(
+                                get_db().await,
+                                String::from(IMAGE_DIRECTORY),
+                            )))
                             .service(controller::breed::breeds_get),
                     )
                     .await
@@ -504,12 +493,10 @@ mod tests {
                 http_method = m.clone();
                 test::init_service(
                     App::new()
-                        .app_data(AppState {
-                            service_container: ServiceContainer::new(
-                                get_db().await,
-                                String::from(IMAGE_DIRECTORY),
-                            ),
-                        })
+                        .app_data(Data::new(ServiceContainer::new(
+                            get_db().await,
+                            String::from(IMAGE_DIRECTORY),
+                        )))
                         .service(controller::user::login_post),
                 )
                 .await
@@ -518,73 +505,87 @@ mod tests {
                 // Caution GET only implemented.
                 test::init_service(
                     App::new()
-                        .app_data(AppState {
-                            service_container: ServiceContainer::new(
-                                get_db().await,
-                                String::from(IMAGE_DIRECTORY),
-                            ),
-                        })
+                        .app_data(Data::new(ServiceContainer::new(
+                            get_db().await,
+                            String::from(IMAGE_DIRECTORY),
+                        )))
                         .service(controller::nestbox::nestboxes_get),
                 )
                 .await
             }
         };
 
-        let mut hm: HeaderMap = HeaderMap::new();
-        hm.insert(
-            actix_web::http::header::CONTENT_TYPE,
-            HeaderValue::from_static("application/json"),
-        );
-        hm.insert(
-            actix_web::http::header::AUTHORIZATION,
-            HeaderValue::from_static(&format!("Basic {}", sessiontoken)),
-        );
-        let mut header = HeaderName::from_static("aa");
-
-        let mut hm_auth_only = HeaderMap::new();
-        hm_auth_only.insert(
-            HeaderName::from_static("Authorization"),
-            HeaderValue::from_static(&format!("Basic {}", sessiontoken)),
-        );
+        let auth_token = format!("Basic {}", sessiontoken);
         match http_method {
             HttpMethod::Post => match req {
                 RequestData::Empty => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .insert_header(hm)
-                        .send_request(&mut app)
+                        .append_header((
+                            actix_web::http::header::CONTENT_TYPE,
+                            HeaderValue::from_static("application/json"),
+                        ))
+                        .append_header((
+                            actix_web::http::header::AUTHORIZATION,
+                            HeaderValue::from_str(&auth_token).unwrap(),
+                        ))
+                        .send_request(&app)
                         .await
                 }
                 RequestData::Login(req) => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .insert_header(hm)
+                        .append_header((
+                            actix_web::http::header::CONTENT_TYPE,
+                            HeaderValue::from_static("application/json"),
+                        ))
+                        .append_header((
+                            actix_web::http::header::AUTHORIZATION,
+                            HeaderValue::from_str(&auth_token).unwrap(),
+                        ))
                         .set_json(&req)
-                        .send_request(&mut app)
+                        .send_request(&app)
                         .await
                 }
                 RequestData::Bird(req) => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .insert_header(hm)
+                        .append_header((
+                            actix_web::http::header::CONTENT_TYPE,
+                            HeaderValue::from_static("application/json"),
+                        ))
+                        .append_header((
+                            actix_web::http::header::AUTHORIZATION,
+                            HeaderValue::from_str(&auth_token).unwrap(),
+                        ))
                         .set_json(&req)
-                        .send_request(&mut app)
+                        .send_request(&app)
                         .await
                 }
                 RequestData::Geolocation(req) => {
                     test::TestRequest::post()
                         .uri(uri)
-                        .insert_header(hm)
+                        .insert_header((
+                            actix_web::http::header::CONTENT_TYPE,
+                            HeaderValue::from_static("application/json"),
+                        ))
+                        .append_header((
+                            actix_web::http::header::AUTHORIZATION,
+                            HeaderValue::from_str(&auth_token).unwrap(),
+                        ))
                         .set_json(&req)
-                        .send_request(&mut app)
+                        .send_request(&app)
                         .await
                 }
             },
             HttpMethod::Get => {
                 test::TestRequest::get()
                     .uri(uri)
-                    .insert_header(hm_auth_only)
-                    .send_request(&mut app)
+                    .insert_header((
+                        actix_web::http::header::AUTHORIZATION,
+                        HeaderValue::from_str(&auth_token).unwrap(),
+                    ))
+                    .send_request(&app)
                     .await
             }
         }
