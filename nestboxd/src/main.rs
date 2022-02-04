@@ -84,10 +84,8 @@ mod tests {
 
     use super::*;
 
+    use actix_http::header::HeaderValue;
     use actix_web::{http::StatusCode, test, App};
-    //use actix_web::http::header::{HeaderName, HeaderValue};
-    use actix_http::header::map::HeaderMap;
-    use actix_http::header::{Header, HeaderName, HeaderValue};
 
     #[derive(Clone)]
     enum HttpMethod {
@@ -124,7 +122,6 @@ mod tests {
     const USER_MANDANT_1_GEOLOCATION: &str = "fg_180";
     const NESTBOX_MANDANT_1: &str = "45f149a2-b05a-4de8-a358-6e704eb6efca";
     const BIRD_MANDANT_1: &str = "ffbf3bf5-868e-437b-b0e8-cf19ce2a6ad2";
-    const MANDANT_1: &str = "5bcb187b-996a-4169-8f12-cc315c2b22f7";
 
     #[actix_rt::test]
     async fn test_200_login_post_ok() {
@@ -180,7 +177,7 @@ mod tests {
         .await;
         assert_eq!(svr_resp.status(), StatusCode::OK);
         let response: NestboxResponse = test::read_body_json(svr_resp).await;
-        assert!(response.uuid == String::from(NESTBOX_EXISTING));
+        assert!(response.uuid == NESTBOX_EXISTING);
     }
 
     #[actix_rt::test]
@@ -437,7 +434,7 @@ mod tests {
         req: RequestData,
     ) -> actix_web::dev::ServiceResponse {
         let mut http_method = HttpMethod::Get;
-        let mut app = match endpoint {
+        let app = match endpoint {
             EndPoints::Birds(m) => {
                 http_method = m.clone();
                 test::init_service(

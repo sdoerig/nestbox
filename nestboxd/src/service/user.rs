@@ -64,7 +64,6 @@ fn is_password_correct(password: &str, password_hash: &str, salt: &str) -> bool 
 mod tests {
     use super::*;
     use crate::service::session::SessionService;
-    use mongodb::bson::Document;
     use mongodb::{options::ClientOptions, Client};
 
     #[actix_rt::test]
