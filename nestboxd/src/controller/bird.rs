@@ -1,6 +1,8 @@
 use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 
-use crate::{controller::utilities::DocumentResponse, service::res_structs::BirdResponse};
+use crate::{
+    controller::utilities::DocumentResponse, service::res_structs::BirdResponse, ServiceContainer,
+};
 
 use super::{
     error_message::{create_error_message, UNAUTHORIZED},
@@ -9,14 +11,13 @@ use super::{
 
 #[get("/birds")]
 pub async fn birds_get(
-    app_data: web::Data<crate::AppState>,
+    app_data: web::Data<ServiceContainer>,
     req: HttpRequest,
     mut paging: web::Query<PagingQuery>,
 ) -> impl Responder {
     paging.sanatizing();
 
     let session_obj = app_data
-        .service_container
         .session
         .validate_session(&parse_auth_header(&req))
         .await;
@@ -24,7 +25,6 @@ pub async fn birds_get(
         return HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED));
     }
     let (birds, counted_documents) = app_data
-        .service_container
         .bird
         .get_by_mandant_uuid(&session_obj, &paging)
         .await;

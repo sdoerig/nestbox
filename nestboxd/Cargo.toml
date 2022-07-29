@@ -5,9 +5,10 @@ authors = ["Stefan Dörig <sdoerig@bluewin.ch>"]
 edition = "2021"
 
 [dependencies]
-actix-multipart = "0.3"
-actix-rt = "*"
-actix-web = "3"
+actix-multipart = "0.4"
+actix-rt = "2"
+actix-web = "4"
+actix-http = "3"
 chrono = "0.4"
 data-encoding = "2"
 env_logger = "0.8"

@@ -31,6 +31,7 @@ impl ImageService {
             // File::create is blocking operation, use threadpool
             let mut f = web::block(|| std::fs::File::create(filepath))
                 .await
+                .unwrap()
                 .unwrap();
 
             // Field in turn is stream of *Bytes* object
@@ -39,6 +40,7 @@ impl ImageService {
                 // filesystem operations are blocking, we have to use threadpool
                 f = web::block(move || f.write_all(&data).map(|_| f))
                     .await
+                    .unwrap()
                     .unwrap();
             }
             let kind = infer::get_from_path(&filepath_check_type);

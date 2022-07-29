@@ -5,6 +5,8 @@ use serde::Deserialize;
 
 use serde::Serialize;
 
+use crate::ServiceContainer;
+
 use super::error_message::UNAUTHORIZED;
 use super::error_message::{create_error_message, NESTBOX_OF_OTHER_MANDANT};
 use super::req_structs::NestboxReq;
@@ -133,7 +135,7 @@ pub fn parse_auth_header(http_req: &HttpRequest) -> String {
 
 pub async fn nestbox_req_is_authorized(
     session: &super::utilities::SessionObject,
-    app_data: &web::Data<crate::AppState>,
+    app_data: &ServiceContainer,
     nestbox_req: &web::Path<NestboxReq>,
 ) -> Option<HttpResponse> {
     if !session.is_valid_session() {
@@ -142,7 +144,6 @@ pub async fn nestbox_req_is_authorized(
         return Some(HttpResponse::Unauthorized().json(create_error_message(UNAUTHORIZED)));
     }
     match app_data
-        .service_container
         .nestbox
         .get_by_mandant_uuid(session, nestbox_req)
         .await

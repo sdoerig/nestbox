@@ -6,6 +6,7 @@ use crate::{
         validator::Validator,
     },
     service::res_structs::BreedResponse,
+    ServiceContainer,
 };
 use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 
@@ -17,7 +18,7 @@ use super::{
 
 #[get("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_get(
-    app_data: web::Data<crate::AppState>,
+    app_data: web::Data<ServiceContainer>,
     req: HttpRequest,
     breed_req: web::Path<NestboxReq>,
     mut paging: web::Query<PagingQuery>,
@@ -28,12 +29,10 @@ pub async fn breeds_get(
 
     paging.sanatizing();
     let session_obj = app_data
-        .service_container
         .session
         .validate_session(&parse_auth_header(&req))
         .await;
     let (breeds, counted_documents) = app_data
-        .service_container
         .breed
         .get_by_nestbox_uuid(&session_obj, &breed_req, &paging)
         .await;
@@ -47,7 +46,7 @@ pub async fn breeds_get(
 
 #[post("/nestboxes/{uuid}/breeds")]
 pub async fn breeds_post(
-    app_data: web::Data<crate::AppState>,
+    app_data: web::Data<ServiceContainer>,
     req: HttpRequest,
     nestbox_req: web::Path<NestboxReq>,
     bird_req: web::Json<BirdReq>,
@@ -63,7 +62,6 @@ pub async fn breeds_post(
     // - if the bird does not have a uuid it is considered to create a new bird for
     //   the users mandant.
     let session = app_data
-        .service_container
         .session
         .validate_session(&parse_auth_header(&req))
         .await;
@@ -71,7 +69,6 @@ pub async fn breeds_post(
         return value;
     }
     match app_data
-        .service_container
         .breed
         .post_breed(&session, &nestbox_req, &bird_req)
         .await

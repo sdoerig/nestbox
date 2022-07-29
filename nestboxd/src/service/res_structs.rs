@@ -245,12 +245,9 @@ fn get_doc_by_key<'a>(doc: &'a Document, key: &str) -> Option<&'a Document> {
 mod tests {
     use std::time::{Duration, SystemTime};
 
-    use super::{
-        BirdResponse, BreedResponse, GeolocationResponse, LoginResponse, MapDocument,
-        NestboxResponse,
-    };
+    use super::{BreedResponse, MapDocument};
+    use mongodb::bson::doc;
     use mongodb::bson::DateTime;
-    use mongodb::bson::{doc, Document};
     const UUID: &str = "0b5cec76-02ac-4c6e-933e-62ebfae3e337";
     const NESTBOX_UUID: &str = "6f25fd00-011a-462f-aa3d-6959e6809017";
     const BIRD_UUID: &str = "ebe661d6-77ba-4bd1-bae3-9e4e7eb880a6";
@@ -333,7 +330,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn test_() {
-        let geo_loc = doc! {
+        let _geo_loc = doc! {
         "uuid" : UUID,
         "nestbox_uuid" : NESTBOX_UUID,
         "from_date" : DateTime::from( SystemTime::now() + Duration::new(31536000000, 0)),
